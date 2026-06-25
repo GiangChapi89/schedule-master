@@ -202,6 +202,10 @@
                 currentUser = user;
                 myUserId = user.uid;
                 document.getElementById('userDisplay').innerHTML = `👤 ${user.displayName || user.email}`;
+                // ✅ SỬA LỖI: Dùng setTimeout để đảm bảo DOM tải xong mới chạy
+                setTimeout(() => {
+                    document.getElementById('changeNameBtn').style.display = 'inline-block';
+                }, 100); 
                 document.getElementById('changeNameBtn').style.display = 'inline-block';
                 
                 document.getElementById('loginToggleBtn').style.display = 'none';
@@ -238,7 +242,11 @@
             } else {
                 currentUser = null;
                 currentUserRole = 'user';
-                document.getElementById('userDisplay').innerHTML = '👤 Chưa đăng nhập';
+                document.getElementById('userDisplay').innerHTML = `👤 ${user.displayName || user.email}`;
+                // ✅ SỬA LỖI: Dùng setTimeout để đảm bảo DOM tải xong mới chạy
+                setTimeout(() => {
+                    document.getElementById('changeNameBtn').style.display = 'inline-block';
+                }, 100); 
                 document.getElementById('changeNameBtn').style.display = 'none';
                 document.getElementById('loginToggleBtn').style.display = 'inline-block';
                 document.getElementById('logoutBtn').style.display = 'none';
