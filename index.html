@@ -197,16 +197,20 @@
 
         async function doLogout() { await auth.signOut(); location.reload(); }
      
+        // --- 4. AUTH STATE CHANGED ---      
         auth.onAuthStateChanged(async (user) => {
+            // CHỐNG LỖI NULL: Đặt biến DOM ra ngoài để kiểm tra an toàn
+            const changeNameBtnElement = document.getElementById('changeNameBtn');
+            
             if (user) {
                 currentUser = user;
                 myUserId = user.uid;
                 document.getElementById('userDisplay').innerHTML = `👤 ${user.displayName || user.email}`;
-                // ✅ SỬA LỖI: Dùng setTimeout để đảm bảo DOM tải xong mới chạy
-                setTimeout(() => {
-                    document.getElementById('changeNameBtn').style.display = 'inline-block';
-                }, 100); 
-                document.getElementById('changeNameBtn').style.display = 'inline-block';
+                
+                // ✅ CHỈ chạy nếu thẻ thực sự tồn tại
+                if (changeNameBtnElement) {
+                    changeNameBtnElement.style.display = 'inline-block';
+                }
                 
                 document.getElementById('loginToggleBtn').style.display = 'none';
                 document.getElementById('logoutBtn').style.display = 'inline-block';
@@ -242,12 +246,13 @@
             } else {
                 currentUser = null;
                 currentUserRole = 'user';
-                document.getElementById('userDisplay').innerHTML = `👤 ${user.displayName || user.email}`;
-                // ✅ SỬA LỖI: Dùng setTimeout để đảm bảo DOM tải xong mới chạy
-                setTimeout(() => {
-                    document.getElementById('changeNameBtn').style.display = 'inline-block';
-                }, 100); 
-                document.getElementById('changeNameBtn').style.display = 'none';
+                document.getElementById('userDisplay').innerHTML = '👤 Chưa đăng nhập';
+                
+                // ✅ CHỈ chạy nếu thẻ thực sự tồn tại
+                if (changeNameBtnElement) {
+                    changeNameBtnElement.style.display = 'none';
+                }
+                
                 document.getElementById('loginToggleBtn').style.display = 'inline-block';
                 document.getElementById('logoutBtn').style.display = 'none';
                 document.getElementById('appContainer').style.display = 'none';
