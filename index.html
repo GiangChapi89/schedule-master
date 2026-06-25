@@ -140,6 +140,7 @@
             }
         }
 
+        // --- 3. ĐĂNG KÝ / ĐĂNG NHẬP ---
         async function doRegister() {
             const name = document.getElementById('regFullName').value.trim();
             const email = document.getElementById('regEmail').value.trim();
@@ -180,17 +181,35 @@
             }
         }
 
+        // ✅ SỬA LỖI GOOGLE: Dùng Popup chủ động để tránh mất trạng thái đăng nhập
         async function doGoogleLogin() {
+            const provider = new firebase.auth.GoogleAuthProvider();
             try {
-                const provider = new firebase.auth.GoogleAuthProvider();
-                await auth.signInWithRedirect(provider);
-            } catch(e) {
-                alert("Lỗi Google: " + e.message);
+                // Thử đăng nhập bằng Popup (Cửa sổ bật lên)
+                const result = await auth.signInWithPopup(provider);
+                if (result.user) {
+                    location.reload(); // Đăng nhập thành công thì tải lại trang
+                }
+            } catch (error) {
+                // Nếu trình duyệt chặn Popup, tự động chuyển sang Redirect dự phòng
+                if (error.code === 'auth/popup-blocked' || error.code === 'auth/cross-origin-auth') {
+                    alert("Trình duyệt chặn cửa sổ bật lên. Hệ thống sẽ chuyển hướng sang Google để đăng nhập.");
+                    try {
+                        await auth.signInWithRedirect(provider);
+                    } catch (redirectError) {
+                        alert("Lỗi đăng nhập Google (dù đã thử Redirect): " + redirectError.message);
+                    }
+                } else {
+                    alert("Lỗi đăng nhập Google: " + error.message);
+                }
             }
         }
 
+        // Xử lý kết quả khi quay lại từ Redirect dự phòng (Nếu Popup bị chặn)
         auth.getRedirectResult().then((result) => {
-            if (result.user) location.reload();
+            if (result.user) {
+                location.reload();
+            }
         }).catch((error) => {
             console.error("Lỗi Redirect Google:", error);
         });
