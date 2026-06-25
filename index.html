@@ -306,13 +306,12 @@
 
             users.forEach(user => {
                 const userData = scheduleMap[user.id] || {};
+                // Thêm dấu cách và xuống dòng rõ ràng để tránh nhầm lẫn dấu backtick
                 html += `<tr class="teacher-row"><td>${user.fullname || 'GV'}</td>`;
+                
                 let lecturerTotal = 0;
 
                 days.forEach(day => {
-                    const dayArr = userData[day] || []; 
-                    let displayHtml = '';
-                    let dayTotal = 0;
 
                     if(Array.isArray(dayArr) && dayArr.length > 0) {
                         dayArr.forEach(entry => {
