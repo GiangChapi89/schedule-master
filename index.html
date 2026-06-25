@@ -141,7 +141,7 @@
             if (user) {
                 currentUser = user; myUserId = user.uid;
                 document.getElementById('userDisplay').innerHTML = `👤 ${user.displayName || user.email}`;
-                document.getElementById('changeNameBtn').style.display = 'inline-block'; // Hiện nút bút chì
+                document.getElementById('changeNameBtn')?.style.display = 'inline-block';
                 document.getElementById('loginToggleBtn').style.display = 'none';
                 document.getElementById('logoutBtn').style.display = 'inline-block';
                 document.getElementById('authContainer').style.display = 'none';
@@ -261,7 +261,15 @@
         }
 
         async function doLogout() { await auth.signOut(); location.reload(); }
-        function toggleAuthModal() { const m = document.getElementById('authContainer'); m.style.display = m.style.display === 'none' ? 'block' : 'none'; }
+        function toggleAuthModal() {
+            const modal = document.getElementById('authContainer');
+            // 🛡️ Thêm dòng kiểm tra này để chặn lỗi nếu modal không tìm thấy
+            if (!modal) {
+                console.warn("Không tìm thấy phần tử authContainer trên giao diện.");
+                return; 
+            }
+            modal.style.display = modal.style.display === 'none' ? 'block' : 'none';
+        }
         function switchAuthTab(tab) { document.querySelectorAll('.auth-tab, .auth-form-section').forEach(el => el.classList.remove('active')); document.getElementById(tab === 'login' ? 'loginSection' : 'registerSection').classList.add('active'); document.querySelector(`.auth-tabs .auth-tab:${tab === 'login' ? 'first-child' : 'last-child'}`).classList.add('active'); }
 
         // --- DATA LOGIC ---
