@@ -307,18 +307,21 @@
 
             users.forEach(user => {
                 const userData = scheduleMap[user.id] || {};
-                // Thêm dấu cách và xuống dòng rõ ràng để tránh nhầm lẫn dấu backtick
                 html += `<tr class="teacher-row"><td>${user.fullname || 'GV'}</td>`;
                 
                 let lecturerTotal = 0;
 
                 days.forEach(day => {
+                    // ✅ SỬA LỖI: Khôi phục 3 dòng khai báo biến bị thiếu
+                    const dayArr = userData[day] || []; // Đây là mảng các cặp tiết
+                    let displayHtml = '';
+                    let dayTotal = 0;
 
                     if(Array.isArray(dayArr) && dayArr.length > 0) {
                         dayArr.forEach(entry => {
                             if(entry.period && entry.subject) {
                                 displayHtml += `<div class="entry-item"><b>[Cặp ${entry.period}]</b> ${entry.subject}<br><span style="font-size:12px; color:#666;">Lớp: ${entry.class || '-'} - Phòng: ${entry.room || '-'}</span></div>`;
-                                dayTotal += 2; 
+                                dayTotal += 2; // 1 cặp = 2 tiết
                             }
                         });
                     }
