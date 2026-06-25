@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚙️ Quản trị Lịch giảng dạy</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* (Copy CSS cơ bản từ admin.html cũ, chỉnh lại màu sắc cho phù hợp) */
+        body { font-family: sans-serif; background: #f4f6f9; padding: 20px; }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        h1 { color: #333; display: flex; align-items: center; gap: 10px; }
+        input, select, button { padding: 10px 15px; border-radius: 8px; border: 1px solid #ddd; margin: 5px; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; transition: 0.2s; }
+        button:hover { opacity: 0.8; }
+        .btn-danger { background: #dc3545; }
+        .btn-success { background: #28a745; }
+        .list-item { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 10px 0; }
+    </style>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>⚙️ Quản lý hệ thống lịch giảng dạy</h1>
+        
+        <div style="background: #e8f4fd; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            <p><i class="fas fa-info-circle"></i> Bạn cần tạo tài khoản cho các Giảng viên. Họ sẽ dùng Email/Mật khẩu này để đăng nhập nhập liệu.</p>
+        </div>
+
+        <!-- 1. Quản lý Giảng viên -->
+        <h3>👨‍🏫 Danh sách Giảng viên</h3>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
+            <input type="text" id="teacherName" placeholder="Họ và tên GV">
+            <input type="email" id="teacherEmail" placeholder="Email đăng nhập">
+            <input type="password" id="teacherPass" placeholder="Mật khẩu">
+            <button onclick="createTeacher()" class="btn-success"><i class="fas fa-plus"></i> Thêm GV</button>
+        </div>
+        <div id="teacherList"></div>
+
+        <hr style="margin: 30px 0;">
+
+        <!-- 2. Tạo dữ liệu mẫu (Cấu trúc bảng) -->
+        <h3>📅 Thiết lập cấu trúc bảng (Mẫu)</h3>
+        <p><i>Hệ thống sẽ tự động tạo bảng rỗng cho các ngày trong tuần hiện tại.</i></p>
+        <button onclick="setupDefaultTemplate()" class="btn-primary"><i class="fas fa-table"></i> Tạo Bảng Mẫu (Thứ 2 - 7, Tiết I, II, III)</button>
+        
+        <div id="statusMsg" style="margin-top: 20px; font-weight: bold; color: green;"></div>
+    </div>
+
+    <script src="schedule-config.js"></script>
+    <script>
+        // Kiểm tra quyền Admin (Giả lập: Chỉ user hiện tại là Admin)
+        // Trong thực tế, bạn nên lưu role 'admin' trong Firestore user document
+        auth.onAuthStateChanged(user => {
+            if(!user) {
+                alert("Vui lòng đăng nhập bằng tài khoản Admin!");
+                window.location.href = "index.html";
+            }
+        });
+
+        // 1. Tạo Giảng viên
+        async function createTeacher() {
+            const name = document.getElementById('teacherName').value;
+            const email = document.getElementById('teacherEmail').value;
+            const pass = document.getElementById('teacherPass').value;
+            if(!name || !email || !pass) return alert("Vui lòng điền đầy đủ thông tin!");
+
+            try {
+                // Lưu vào Firestore
+                await db.collection('users').add({
+                    fullname: name,
+                    email: email,
+                    role: 'teacher',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                // (Tùy chọn) Bạn có thể dùng Admin SDK để tạo Auth user, nhưng ở client-side
+                // chúng ta sẽ tạo Auth user bằng cách đăng ký thủ công hoặc để người dùng tự đăng ký.
+                // Ở đây mình dùng cách lưu thông tin vào DB, và giảng viên đăng nhập bằng Email/Pass.
+                
+                document.getElementById('teacherName').value = '';
+                document.getElementById('teacherEmail').value = '';
+                document.getElementById('teacherPass').value = '';
+                loadTeachers();
+                alert("Đã thêm giảng viên!");
+            } catch (e) {
+                alert("Lỗi: " + e.message);
+            }
+        }
+
+        // 2. Load danh sách GV
+        async function loadTeachers() {
+            const container = document.getElementById('teacherList');
+            container.innerHTML = '<p>Đang tải...</p>';
+            
+            const snapshot = await db.collection('users').where('role', '==', 'teacher').get();
+            container.innerHTML = '';
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                container.innerHTML += `
+                    <div class="list-item">
+                        <div><strong>${data.fullname}</strong> <br> <span style="color:#777;font-size:0.9em;">${data.email}</span></div>
+                        <button class="btn-danger btn-sm" onclick="deleteTeacher('${doc.id}')"><i class="fas fa-trash"></i></button>
+                    </div>
+                `;
+            });
+        }
+
+        async function deleteTeacher(id) {
+            if(confirm("Xóa giảng viên này?")) {
+                await db.collection('users').doc(id).delete();
+                loadTeachers();
+            }
+        }
+
+        // 3. Thiết lập Bảng mẫu
+        async function setupDefaultTemplate() {
+            const currentWeek = getCurrentWeek();
+            const year = new Date().getFullYear();
+            const weekDocId = `week_${year}_${currentWeek}`;
+
+            // Định nghĩa các cột trong bảng (Giống như bạn yêu cầu)
+            const columnsTemplate = [
+                { key: 'day', label: 'Thứ', type: 'select', options: ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'] },
+                { key: 'period', label: 'Cặp tiết', type: 'select', options: ['I', 'II', 'III', 'IV'] },
+                { key: 'subject', label: 'Môn học', type: 'text' },
+                { key: 'class', label: 'Lớp học', type: 'text' },
+                { key: 'room', label: 'Phòng học', type: 'text' },
+                { key: 'type', label: 'Loại tiết', type: 'select', options: ['Lý thuyết', 'Ôn tập', 'Kiểm tra', 'Thi kết thúc'] },
+                { key: 'examiner', label: 'Giám thị coi thi', type: 'text' },
+                { key: 'slots', label: 'Số lượng tiết (Tổng)', type: 'number' }
+            ];
+
+            // Lưu cấu hình này vào Firestore
+            await db.collection('configs').doc('columns').set({ fields: columnsTemplate });
+            await db.collection('weeks').doc(weekDocId).set({
+                year: year,
+                week: currentWeek,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            document.getElementById('statusMsg').innerText = `✅ Đã tạo cấu trúc bảng mẫu cho Tuần ${currentWeek}. Giảng viên có thể bắt đầu nhập liệu.`;
+        }
+
+        // Load GV khi mở trang
+        loadTeachers();
+    </script>
+</body>
+</html>
