@@ -233,7 +233,7 @@
                 currentUser = user;
                 myUserId = user.uid;
                 document.getElementById('userDisplay').innerHTML = `👤 ${user.displayName || user.email}`;
-                document.getElementById('changeNameBtn').style.display = 'inline-block';
+                document.getElementById('changeNameBtn')?.style.display = 'inline-block';
                 
                 document.getElementById('loginToggleBtn').style.display = 'none';
                 document.getElementById('logoutBtn').style.display = 'inline-block';
@@ -270,7 +270,7 @@
                 currentUser = null;
                 currentUserRole = 'user';
                 document.getElementById('userDisplay').innerHTML = '👤 Chưa đăng nhập';
-                document.getElementById('changeNameBtn').style.display = 'none';
+                document.getElementById('changeNameBtn')?.style.display = 'none';
                 
                 document.getElementById('loginToggleBtn').style.display = 'inline-block';
                 document.getElementById('logoutBtn').style.display = 'none';
