@@ -33,6 +33,11 @@
         #appContainer { display: none; }
         .user-badge { background: #27ae60; padding: 4px 12px; border-radius: 20px; font-size: 12px; color: white; margin-left: 10px; }
 
+        /* ===== ADMIN SELECTOR ===== */
+        #adminUserSelectorWrapper { display: none; margin-bottom: 20px; padding: 15px; background: #e8f4fd; border-radius: 8px; border: 1px solid #bce0fd; }
+        #adminUserSelectorWrapper label { font-weight: bold; margin-right: 10px; }
+        #adminUserSelectorWrapper select { padding: 8px 12px; border-radius: 4px; border: 1px solid #ccc; min-width: 200px; }
+
         /* ===== FORM NHẬP LIỆU DẠNG CỘT DỌC (Stacked Form) ===== */
         #myScheduleForm { display: flex; flex-direction: column; gap: 30px; margin-top: 20px; }
         
@@ -64,10 +69,14 @@
         .btn-danger { background: #e74c3c; color: white; }
         .btn-danger:hover { background: #c0392b; }
 
-        /* Bảng tổng hợp (Mỗi cặp tiết 1 dòng) */
-        .table-responsive { overflow-x: auto; margin-top: 30px; }
-        table { width: 100%; border-collapse: collapse; font-size: 14px; }
-        th { background: #2c3e50; color: white; padding: 8px 10px; text-align: center; position: sticky; top: 0; }
+        /* ===== BẢNG TỔNG HỢP ===== */
+        .table-wrapper { overflow-x: auto; margin-top: 30px; position: relative; }
+        /* Resizable Handle (Thanh kéo thả) */
+        th .resize-handle { position: absolute; right: 0; top: 0; height: 100%; width: 5px; cursor: col-resize; background: transparent; z-index: 10; }
+        th .resize-handle:hover, th .resize-handle.active { background: rgba(255,255,255,0.5); }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 14px; table-layout: fixed; }
+        th { background: #2c3e50; color: white; padding: 8px 10px; text-align: center; position: relative; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         td, th { border: 1px solid #ddd; padding: 8px 10px; text-align: left; vertical-align: top; }
         
         /* Header ngày 2 dòng */
@@ -104,6 +113,9 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <!-- Thư viện hỗ trợ kéo thả cột -->
+    <script src="https://cdn.jsdelivr.net/npm/colresizable@1.6.0/colResizable.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -145,8 +157,17 @@
                 <button class="btn-load" onclick="loadData()"><i class="fas fa-sync"></i> Làm mới dữ liệu</button>
             </div>
             
-            <div id="scheduleTableContainer" class="table-responsive">
+            <div id="scheduleTableContainer" class="table-wrapper">
                 <p style="text-align: center; color: #888; padding: 40px 0;">Đang tải dữ liệu...</p>
+            </div>
+
+            <!-- Bộ chọn giảng viên dành cho Admin -->
+            <div id="adminUserSelectorWrapper">
+                <label for="adminUserSelect">👤 Chọn giảng viên cần xem/sửa:</label>
+                <select id="adminUserSelect" onchange="onAdminSelectUser()">
+                    <option value="">-- Chọn tên --</option>
+                </select>
+                <span style="font-size:13px; color:#666; margin-left:10px;">(Bạn đang ở chế độ Quản trị viên. Hãy chọn tên để thao tác thay họ.)</span>
             </div>
 
             <div id="myInputSection" style="margin-top: 40px; border-top: 2px dashed #ccc; padding-top: 30px; display:none;">
@@ -178,6 +199,9 @@
         let currentUser = null;
         let currentUserRole = 'user';
         let myUserId = null;
+        // Biến lưu ID của người dùng đang được Admin thao tác
+        let editingUserId = null;
+        
         const currentWeek = getCurrentWeek();
         const currentYear = new Date().getFullYear();
         let globalCatalogs = { subjects: [], classes: [], rooms: [] };
@@ -185,7 +209,6 @@
         // Mảng ngày trong tuần
         const DAYS = ['Thu_2', 'Thu_3', 'Thu_4', 'Thu_5', 'Thu_6', 'Thu_7'];
         const DISPLAY_NAMES = ['THỨ 2', 'THỨ 3', 'THỨ 4', 'THỨ 5', 'THỨ 6', 'THỨ 7'];
-        const DEFAULT_PERIODS = 3; // Mặc định 3 cặp khi hiện form (nhưng giờ mặc định ẩn)
         const SLOTS_PER_PERIOD = 2;
 
         // --- 2. CÁC HÀM GIAO DIỆN ---
@@ -277,6 +300,8 @@
             if (user) {
                 currentUser = user;
                 myUserId = user.uid;
+                editingUserId = user.uid; // Mặc định chỉnh sửa lịch của chính mình
+                
                 document.getElementById('userDisplay').innerHTML = `👤 ${user.displayName || user.email}`;
                 if (changeNameBtnElement) changeNameBtnElement.style.display = 'inline-block';
                 
@@ -307,8 +332,11 @@
                             adminLink.style.marginLeft = '10px';
                             document.getElementById('navRight').appendChild(adminLink);
                         }
+                        // Hiển thị bộ chọn giảng viên cho Admin
+                        document.getElementById('adminUserSelectorWrapper').style.display = 'block';
+                        await loadAdminUserList();
                     }
-                    await createUserRowIfNotExist();
+                    
                     await loadCatalogs();
                     await loadData();
                 } catch (error) { console.error("Lỗi tải user:", error); }
@@ -330,14 +358,52 @@
             if(doc.exists) globalCatalogs = doc.data();
         }
 
+        async function loadAdminUserList() {
+            const sel = document.getElementById('adminUserSelect');
+            // Giữ lại option đầu tiên
+            sel.innerHTML = '<option value="">-- Chọn tên --</option>';
+            
+            const snap = await db.collection('users').where('role', 'in', ['user', 'admin']).get();
+            let options = [];
+            snap.forEach(doc => {
+                if(doc.id !== currentUser.uid) { // Không hiện chính Admin
+                    options.push(`<option value="${doc.id}">${doc.data().fullname || doc.data().email}</option>`);
+                }
+            });
+            sel.innerHTML += options.join('');
+        }
+
+        async function onAdminSelectUser() {
+            const sel = document.getElementById('adminUserSelect');
+            const selectedId = sel.value;
+            
+            if(!selectedId) {
+                // Quay về chỉnh sửa chính mình nếu bỏ chọn
+                editingUserId = currentUser.uid;
+            } else {
+                editingUserId = selectedId;
+            }
+            await loadData();
+        }
+
         async function createUserRowIfNotExist() {
+            // Nếu đang là Admin sửa của người khác, phải dùng editingUserId
+            const targetId = editingUserId || myUserId;
+            if(!targetId) return;
+
             const weekRef = db.collection('weeks').doc(`week_${currentYear}_${currentWeek}`);
             const weekDoc = await weekRef.get();
             if (!weekDoc.exists) await weekRef.set({ createdAt: firebase.firestore.FieldValue.serverTimestamp() });
 
-            const userRowsRef = weekRef.collection('rows').doc(myUserId);
+            const userRowsRef = weekRef.collection('rows').doc(targetId);
             if (!(await userRowsRef.get()).exists) {
-                await userRowsRef.set({ email: currentUser.email, fullname: currentUser.displayName });
+                // Lấy tên từ user collection để lưu vào row
+                const userDoc = await db.collection('users').doc(targetId).get();
+                const userData = userDoc.data();
+                await userRowsRef.set({ 
+                    email: userData.email, 
+                    fullname: userData.fullname 
+                });
             }
         }
 
@@ -351,30 +417,38 @@
                 let scheduleMap = {}; rowsSnap.forEach(doc => { scheduleMap[doc.id] = doc.data(); });
 
                 renderTable(users, scheduleMap);
+                
+                // Đảm bảo user mục tiêu đã tồn tại trong DB
+                await createUserRowIfNotExist();
                 renderMyForm(scheduleMap);
+                
+                // Kích hoạt kéo thả cột sau khi bảng render xong
+                setTimeout(initResizable, 100);
             } catch(e) { document.getElementById('scheduleTableContainer').innerHTML = `<p style="color:red;">Lỗi: ${e.message}</p>`; }
         }
 
         // Hàm tính ngày tháng dựa trên số tuần
         function getDateForDayOfWeek(weekNum, dayOffset) {
             const date = new Date(currentYear, 0, 1 + (weekNum - 1) * 7);
-            const dayOfWeek = date.getDay(); // 0 là Chủ nhật
+            const dayOfWeek = date.getDay(); 
             const diff = (dayOffset - dayOfWeek + 7) % 7;
             date.setDate(date.getDate() + diff);
             return date;
         }
 
-        // --- 6. RENDER FORM MỚI (Mặc định không có cặp tiết nào) ---
+        // --- 6. RENDER FORM ---
         function renderMyForm(scheduleMap) {
             const section = document.getElementById('myInputSection');
             section.style.display = 'block'; 
             const formContainer = document.getElementById('myScheduleForm');
             
+            // Lấy dữ liệu của đúng người đang được edit
+            const targetData = scheduleMap[editingUserId] || {};
+            
             let html = '';
             DAYS.forEach((dayKey, index) => {
                 const displayDay = DISPLAY_NAMES[index];
-                // Lấy dữ liệu hiện có
-                const dayDataFromDB = (scheduleMap && scheduleMap[myUserId] && scheduleMap[myUserId][dayKey]) || [];
+                const dayDataFromDB = targetData[dayKey] || [];
                 
                 html += `<div class="day-schedule-block" id="block_${dayKey}">
                     <div class="day-header">
@@ -385,9 +459,7 @@
                             <button class="btn-sm btn-danger" onclick="clearDay('${dayKey}')">🗑️ Xóa ngày</button>
                         </div>
                     </div>
-                    <div class="period-rows-container" id="container_${dayKey}">
-                        <!-- Mặc định để trống. Chỉ hiện khi có dữ liệu DB hoặc người dùng bấm nút "Thêm cặp" -->
-                    </div>
+                    <div class="period-rows-container" id="container_${dayKey}"></div>
                     <div class="day-total-display">
                         <span id="total_display_${dayKey}" class="day-total-display-text">Tổng: 0 Tiết</span>
                     </div>
@@ -396,29 +468,26 @@
             formContainer.innerHTML = html;
 
             // Điền dữ liệu từ DB vào form (nếu có)
-            DAYS.forEach((dayKey, index) => {
-                const dayDataFromDB = (scheduleMap && scheduleMap[myUserId] && scheduleMap[myUserId][dayKey]) || [];
+            DAYS.forEach((dayKey) => {
+                const dayDataFromDB = targetData[dayKey] || [];
                 if(dayDataFromDB && dayDataFromDB.length > 0) {
                     renderDayRows(dayKey, dayDataFromDB);
                 }
             });
         }
 
-        // Hàm tạo các khối cặp tiết dạng cột dọc
         function renderDayRows(dayKey, data) {
             const container = document.getElementById(`container_${dayKey}`);
             if(!container) return;
             
-            let rowsData = data;
-            // Nếu data rỗng, không render gì cả (mặc định trống)
-            if(!rowsData || rowsData.length === 0) {
+            if(!data || data.length === 0) {
                 container.innerHTML = '';
                 updateDayTotal(dayKey);
                 return;
             }
 
             let html = '';
-            rowsData.forEach((entry, idx) => {
+            data.forEach((entry, idx) => {
                 const periodVal = entry.period || 'I';
                 const periodOpts = ['I', 'II', 'III', 'IV', 'V'].map(p => `<option value="${p}" ${p === periodVal ? 'selected' : ''}>${p}</option>`).join('');
                 
@@ -469,7 +538,6 @@
             updateDayTotal(dayKey);
         }
 
-        // Cập nhật tổng tiết cho ngày
         function updateDayTotal(dayKey) {
             const container = document.getElementById(`container_${dayKey}`);
             if(!container) return;
@@ -480,13 +548,10 @@
                 total += s;
             });
             const display = document.getElementById(`total_display_${dayKey}`);
-            if(display) {
-                display.innerHTML = `Tổng: ${total} Tiết`;
-                // Nếu total = 0 và không có khối nào, ẩn đi dòng tổng cho gọn? Không, vẫn giữ để báo hiệu.
-            }
+            if(display) display.innerHTML = `Tổng: ${total} Tiết`;
         }
 
-        // --- 7. TƯƠNG TÁC FORM (Thêm, Xóa dòng, Lưu) ---
+        // --- 7. TƯƠNG TÁC FORM ---
         function addPeriodRow(dayKey) {
             const container = document.getElementById(`container_${dayKey}`);
             const periodOpts = ['I', 'II', 'III', 'IV', 'V'].map(p => `<option value="${p}">${p}</option>`).join('');
@@ -536,14 +601,6 @@
         }
 
         function removePeriodRow(dayKey, btn) {
-            const container = document.getElementById(`container_${dayKey}`);
-            if(container.querySelectorAll('.period-row-block').length <= 1) {
-                // Nếu chỉ còn 1 dòng, xóa dòng đó đi để người dùng nhấn nút "Thêm cặp" lại
-                // Thay vì bắt buộc giữ 1 dòng, mình cho phép xóa trắng.
-                btn.closest('.period-row-block').remove();
-                updateDayTotal(dayKey);
-                return;
-            }
             btn.closest('.period-row-block').remove();
             updateDayTotal(dayKey);
         }
@@ -569,7 +626,6 @@
             }
         }
 
-        // Lưu 1 ngày
         function saveDay(dayKey) {
             const container = document.getElementById(`container_${dayKey}`);
             const blocks = container.querySelectorAll('.period-row-block');
@@ -595,8 +651,12 @@
 
         async function updateUserDataDay(dayKey, dataArray) {
             if(!currentUser) return;
+            // Admin cần ghi vào ID của người đang được chọn
+            const targetId = editingUserId || myUserId;
+            if(!targetId) return;
+
             try {
-                const rowRef = db.collection('weeks').doc(`week_${currentYear}_${currentWeek}`).collection('rows').doc(myUserId);
+                const rowRef = db.collection('weeks').doc(`week_${currentYear}_${currentWeek}`).collection('rows').doc(targetId);
                 await rowRef.update({ [dayKey]: dataArray });
                 alert(`✅ Đã lưu ngày ${dayKey.replace('_', ' ')} thành công!`);
                 renderDayRows(dayKey, dataArray);
@@ -606,11 +666,12 @@
             }
         }
 
-        // Lưu cả tuần
         async function saveAllWeekData() {
             if(!currentUser) return;
-            let allData = {};
+            const targetId = editingUserId || myUserId;
+            if(!targetId) return;
             
+            let allData = {};
             DAYS.forEach(dayKey => {
                 const container = document.getElementById(`container_${dayKey}`);
                 if(!container) return;
@@ -631,7 +692,7 @@
             });
             
             try {
-                const rowRef = db.collection('weeks').doc(`week_${currentYear}_${currentWeek}`).collection('rows').doc(myUserId);
+                const rowRef = db.collection('weeks').doc(`week_${currentYear}_${currentWeek}`).collection('rows').doc(targetId);
                 await rowRef.update(allData);
                 alert("✅ Đã lưu lịch cả tuần thành công!");
                 loadData();
@@ -640,23 +701,17 @@
             }
         }
 
-        // --- 8. RENDER BẢNG TỔNG HỢP (Header 2 dòng + Màu xanh cho Tổng tiết) ---
+        // --- 8. RENDER BẢNG TỔNG HỢP ---
         function renderTable(users, scheduleMap) {
             const container = document.getElementById('scheduleTableContainer');
-            
-            // Tính toán ngày tháng chính xác cho từng cột
-            const dateObjects = DAYS.map((_, index) => {
-                // Thứ 2 (index 0) là ngày đầu tuần, Thứ 7 (index 5) là cuối tuần. 
-                // Thông thường trong JS, 0 là Chủ nhật, nên offset cho Thứ 2 là 1.
-                return getDateForDayOfWeek(currentWeek, index + 1);
-            });
+            const dateObjects = DAYS.map((_, index) => getDateForDayOfWeek(currentWeek, index + 1));
 
-            let html = `<table>
+            let html = `<table id="scheduleTable" style="width:100%;">
                 <thead>
                     <tr>
                         <th style="min-width:160px; text-align:center;">Giảng Viên</th>
                         ${dateObjects.map((date, idx) => `
-                            <th class="day-header-cell">
+                            <th class="day-header-cell" style="width: 150px;">
                                 <span class="day-name">${DISPLAY_NAMES[idx]}</span>
                                 <span class="day-date">${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}</span>
                             </th>
@@ -681,7 +736,14 @@
                     if(Array.isArray(dayArr) && dayArr.length > 0) {
                         dayArr.forEach(entry => {
                             if(entry.period && entry.subject) {
-                                let lineHtml = `<div class="entry-detail-row">`;
+                                // Tạo tooltip thông minh
+                                let fullContent = `${entry.period}: ${entry.subject}`;
+                                if(entry.class) fullContent += ` / ${entry.class}`;
+                                if(entry.room) fullContent += ` / ${entry.room}`;
+                                fullContent += ` / ${parseInt(entry.slots) || 0}`;
+                                if(entry.note) fullContent += ` / ${entry.note}`;
+
+                                let lineHtml = `<div class="entry-detail-row" title="${fullContent}">`;
                                 lineHtml += `<span class="entry-period-badge">${entry.period}:</span>`;
                                 lineHtml += `<span class="entry-subject">${entry.subject}</span>`;
                                 if(entry.class || entry.room) {
@@ -698,11 +760,10 @@
                             }
                         });
                     }
-                    if(!displayHtml) displayHtml = '<div style="color:#ccc; text-align:center;">-</div>';
+                    if(!displayHtml) displayHtml = '<div style="color:#ccc; text-align:center; margin: 5px 0;">-</div>';
                     lecturerTotal += dayTotal;
                     if(!grandTotals[day]) grandTotals[day] = 0;
                     grandTotals[day] += dayTotal;
-                    // ✅ Hiển thị Tổng màu xanh dương và thêm chữ "Tiết"
                     html += `<td>${displayHtml}<div style="margin-top:8px;border-top:1px dashed #eee;padding-top:5px;text-align:right;">
                         <span class="day-total-display-text">Tổng: ${dayTotal} Tiết</span>
                     </div></td>`;
@@ -717,7 +778,42 @@
             container.innerHTML = html;
         }
 
-        // --- 9. CHỨC NĂNG ĐỔI TÊN ---
+        // --- 9. KÉO THẢ CỘT (RESIZABLE COLUMN) ---
+        function initResizable() {
+            // Nếu đã có thư viện colResizable thì gọi
+            if(typeof $ !== 'undefined' && $.colResizable) {
+                // Tuy nhiên, cách an toàn nhất với Vanilla JS là dùng thư viện của họ.
+                // Ở đây chúng ta dùng biến toàn cục đã include.
+                try {
+                    // Lưu kích thước cột vào localStorage
+                    const savedWidths = localStorage.getItem('schedule_table_col_widths');
+                    
+                    $('table').colResizable({
+                        liveDrag: true,
+                        gripInnerHtml: '<div class="resize-handle"></div>',
+                        draggingClass: 'active',
+                        onResize: function(e) {
+                            // Lưu kích thước sau khi kéo thả
+                            const widths = [];
+                            e.currentTarget.querySelectorAll('th').forEach(th => {
+                                widths.push(th.offsetWidth);
+                            });
+                            localStorage.setItem('schedule_table_col_widths', JSON.stringify(widths));
+                        },
+                        // Khôi phục kích thước đã lưu nếu có
+                        ...(savedWidths ? { 
+                            width: JSON.parse(savedWidths).map(w => w + 'px').join(',') 
+                        } : {})
+                    });
+                } catch (err) {
+                    console.warn("Không thể init colResizable:", err);
+                }
+            } else {
+                console.warn("Thư viện colResizable chưa tải xong hoặc không tương thích.");
+            }
+        }
+
+        // --- 10. CHỨC NĂNG ĐỔI TÊN ---
         function openChangeNameModal() {
             document.getElementById('newDisplayName').value = currentUser.displayName || '';
             document.getElementById('changeNameModal').style.display = 'flex';
