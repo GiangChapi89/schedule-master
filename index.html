@@ -42,7 +42,7 @@
         .day-header h5 { margin: 0; color: #2c3e50; font-weight: 700; font-size: 1.1rem; }
         .day-header .day-controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
         
-        .period-rows-container { display: flex; flex-direction: column; gap: 20px; }
+        .period-rows-container { display: flex; flex-direction: column; gap: 15px; min-height: 20px; }
         
         /* Một khối cặp tiết (Dạng cột dọc) */
         .period-row-block { background: white; padding: 15px; border-radius: 8px; border: 1px solid #e9ecef; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; position: relative; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
@@ -63,14 +63,17 @@
         .btn-success:hover { background: #219a52; }
         .btn-danger { background: #e74c3c; color: white; }
         .btn-danger:hover { background: #c0392b; }
-        .btn-warning { background: #f1c40f; color: #333; }
-        .btn-warning:hover { background: #d4ac0d; }
 
         /* Bảng tổng hợp (Mỗi cặp tiết 1 dòng) */
         .table-responsive { overflow-x: auto; margin-top: 30px; }
         table { width: 100%; border-collapse: collapse; font-size: 14px; }
-        th { background: #2c3e50; color: white; padding: 10px; text-align: center; position: sticky; top: 0; }
+        th { background: #2c3e50; color: white; padding: 8px 10px; text-align: center; position: sticky; top: 0; }
         td, th { border: 1px solid #ddd; padding: 8px 10px; text-align: left; vertical-align: top; }
+        
+        /* Header ngày 2 dòng */
+        .day-header-cell { padding: 6px 10px; text-align: center; min-width: 140px; background: #2c3e50; color: white; }
+        .day-header-cell .day-name { font-size: 14px; font-weight: 700; display: block; margin-bottom: 2px; }
+        .day-header-cell .day-date { font-size: 12px; font-weight: 400; color: #b0c4de; display: block; }
         
         .teacher-header { background: #34495e; color: white; font-weight: bold; text-align: center; }
         
@@ -82,7 +85,11 @@
         .entry-meta { color: #555; font-size: 12px; }
         .entry-note { font-style: italic; color: #2980b9; }
         
+        /* Màu xanh dương cho tổng tiết */
         .total-cell { font-weight: bold; color: #2980b9; text-align: center; }
+        .day-total-display-text { font-weight: bold; color: #2980b9; font-size: 15px; }
+        .day-total-display-text .unit { font-weight: 400; color: #555; font-size: 13px; }
+
         .grand-total-row { background: #34495e; color: white; font-weight: bold; font-size: 15px; text-align: center; }
         .btn-load { background: #f1c40f; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .btn-load:hover { background: #d4ac0d; }
@@ -91,6 +98,7 @@
             .period-row-block { grid-template-columns: 1fr; }
             .day-header { flex-direction: column; align-items: flex-start; }
             .day-total-display { flex-direction: column; align-items: flex-start; }
+            .day-header-cell { min-width: 100px; }
         }
     </style>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -171,11 +179,13 @@
         let currentUserRole = 'user';
         let myUserId = null;
         const currentWeek = getCurrentWeek();
+        const currentYear = new Date().getFullYear();
         let globalCatalogs = { subjects: [], classes: [], rooms: [] };
+        
+        // Mảng ngày trong tuần
         const DAYS = ['Thu_2', 'Thu_3', 'Thu_4', 'Thu_5', 'Thu_6', 'Thu_7'];
-        const DISPLAY_DAYS = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
-        const PERIODS = ['I', 'II', 'III'];
-        const DEFAULT_PERIODS = 3;
+        const DISPLAY_NAMES = ['THỨ 2', 'THỨ 3', 'THỨ 4', 'THỨ 5', 'THỨ 6', 'THỨ 7'];
+        const DEFAULT_PERIODS = 3; // Mặc định 3 cặp khi hiện form (nhưng giờ mặc định ẩn)
         const SLOTS_PER_PERIOD = 2;
 
         // --- 2. CÁC HÀM GIAO DIỆN ---
@@ -321,7 +331,7 @@
         }
 
         async function createUserRowIfNotExist() {
-            const weekRef = db.collection('weeks').doc(`week_${new Date().getFullYear()}_${currentWeek}`);
+            const weekRef = db.collection('weeks').doc(`week_${currentYear}_${currentWeek}`);
             const weekDoc = await weekRef.get();
             if (!weekDoc.exists) await weekRef.set({ createdAt: firebase.firestore.FieldValue.serverTimestamp() });
 
@@ -337,7 +347,7 @@
                 const usersSnap = await db.collection('users').where('role', 'in', ['user', 'admin', 'super_admin']).get();
                 let users = []; usersSnap.forEach(doc => users.push({ id: doc.id, ...doc.data() }));
 
-                const rowsSnap = await db.collection('weeks').doc(`week_${new Date().getFullYear()}_${currentWeek}`).collection('rows').get();
+                const rowsSnap = await db.collection('weeks').doc(`week_${currentYear}_${currentWeek}`).collection('rows').get();
                 let scheduleMap = {}; rowsSnap.forEach(doc => { scheduleMap[doc.id] = doc.data(); });
 
                 renderTable(users, scheduleMap);
@@ -345,7 +355,16 @@
             } catch(e) { document.getElementById('scheduleTableContainer').innerHTML = `<p style="color:red;">Lỗi: ${e.message}</p>`; }
         }
 
-        // --- 6. RENDER FORM MỚI (Stacked Form) ---
+        // Hàm tính ngày tháng dựa trên số tuần
+        function getDateForDayOfWeek(weekNum, dayOffset) {
+            const date = new Date(currentYear, 0, 1 + (weekNum - 1) * 7);
+            const dayOfWeek = date.getDay(); // 0 là Chủ nhật
+            const diff = (dayOffset - dayOfWeek + 7) % 7;
+            date.setDate(date.getDate() + diff);
+            return date;
+        }
+
+        // --- 6. RENDER FORM MỚI (Mặc định không có cặp tiết nào) ---
         function renderMyForm(scheduleMap) {
             const section = document.getElementById('myInputSection');
             section.style.display = 'block'; 
@@ -353,7 +372,8 @@
             
             let html = '';
             DAYS.forEach((dayKey, index) => {
-                const displayDay = DISPLAY_DAYS[index];
+                const displayDay = DISPLAY_NAMES[index];
+                // Lấy dữ liệu hiện có
                 const dayDataFromDB = (scheduleMap && scheduleMap[myUserId] && scheduleMap[myUserId][dayKey]) || [];
                 
                 html += `<div class="day-schedule-block" id="block_${dayKey}">
@@ -366,19 +386,21 @@
                         </div>
                     </div>
                     <div class="period-rows-container" id="container_${dayKey}">
-                        <!-- Các khối cặp tiết sẽ được render ở đây -->
+                        <!-- Mặc định để trống. Chỉ hiện khi có dữ liệu DB hoặc người dùng bấm nút "Thêm cặp" -->
                     </div>
                     <div class="day-total-display">
-                        <span id="total_display_${dayKey}">Tổng: 0 tiết</span>
+                        <span id="total_display_${dayKey}" class="day-total-display-text">Tổng: 0 Tiết</span>
                     </div>
                 </div>`;
             });
             formContainer.innerHTML = html;
 
-            // Điền dữ liệu vào từng ngày
+            // Điền dữ liệu từ DB vào form (nếu có)
             DAYS.forEach((dayKey, index) => {
                 const dayDataFromDB = (scheduleMap && scheduleMap[myUserId] && scheduleMap[myUserId][dayKey]) || [];
-                renderDayRows(dayKey, dayDataFromDB);
+                if(dayDataFromDB && dayDataFromDB.length > 0) {
+                    renderDayRows(dayKey, dayDataFromDB);
+                }
             });
         }
 
@@ -388,13 +410,16 @@
             if(!container) return;
             
             let rowsData = data;
+            // Nếu data rỗng, không render gì cả (mặc định trống)
             if(!rowsData || rowsData.length === 0) {
-                rowsData = PERIODS.map(p => ({ period: p, subject: '', class: '', room: '', slots: SLOTS_PER_PERIOD, note: '' }));
+                container.innerHTML = '';
+                updateDayTotal(dayKey);
+                return;
             }
 
             let html = '';
             rowsData.forEach((entry, idx) => {
-                const periodVal = entry.period || PERIODS[idx] || 'I';
+                const periodVal = entry.period || 'I';
                 const periodOpts = ['I', 'II', 'III', 'IV', 'V'].map(p => `<option value="${p}" ${p === periodVal ? 'selected' : ''}>${p}</option>`).join('');
                 
                 html += `<div class="period-row-block">
@@ -447,13 +472,18 @@
         // Cập nhật tổng tiết cho ngày
         function updateDayTotal(dayKey) {
             const container = document.getElementById(`container_${dayKey}`);
+            if(!container) return;
             const blocks = container.querySelectorAll('.period-row-block');
             let total = 0;
             blocks.forEach(block => {
                 let s = parseInt(block.querySelector('.slots-input').value) || 0;
                 total += s;
             });
-            document.getElementById(`total_display_${dayKey}`).innerHTML = `Tổng: ${total} tiết`;
+            const display = document.getElementById(`total_display_${dayKey}`);
+            if(display) {
+                display.innerHTML = `Tổng: ${total} Tiết`;
+                // Nếu total = 0 và không có khối nào, ẩn đi dòng tổng cho gọn? Không, vẫn giữ để báo hiệu.
+            }
         }
 
         // --- 7. TƯƠNG TÁC FORM (Thêm, Xóa dòng, Lưu) ---
@@ -508,7 +538,10 @@
         function removePeriodRow(dayKey, btn) {
             const container = document.getElementById(`container_${dayKey}`);
             if(container.querySelectorAll('.period-row-block').length <= 1) {
-                alert("Mỗi ngày cần ít nhất 1 dòng!");
+                // Nếu chỉ còn 1 dòng, xóa dòng đó đi để người dùng nhấn nút "Thêm cặp" lại
+                // Thay vì bắt buộc giữ 1 dòng, mình cho phép xóa trắng.
+                btn.closest('.period-row-block').remove();
+                updateDayTotal(dayKey);
                 return;
             }
             btn.closest('.period-row-block').remove();
@@ -563,7 +596,7 @@
         async function updateUserDataDay(dayKey, dataArray) {
             if(!currentUser) return;
             try {
-                const rowRef = db.collection('weeks').doc(`week_${new Date().getFullYear()}_${currentWeek}`).collection('rows').doc(myUserId);
+                const rowRef = db.collection('weeks').doc(`week_${currentYear}_${currentWeek}`).collection('rows').doc(myUserId);
                 await rowRef.update({ [dayKey]: dataArray });
                 alert(`✅ Đã lưu ngày ${dayKey.replace('_', ' ')} thành công!`);
                 renderDayRows(dayKey, dataArray);
@@ -598,7 +631,7 @@
             });
             
             try {
-                const rowRef = db.collection('weeks').doc(`week_${new Date().getFullYear()}_${currentWeek}`).collection('rows').doc(myUserId);
+                const rowRef = db.collection('weeks').doc(`week_${currentYear}_${currentWeek}`).collection('rows').doc(myUserId);
                 await rowRef.update(allData);
                 alert("✅ Đã lưu lịch cả tuần thành công!");
                 loadData();
@@ -607,10 +640,32 @@
             }
         }
 
-        // --- 8. RENDER BẢNG TỔNG HỢP (1 DÒNG CHO MỖI CẶP TIẾT) ---
+        // --- 8. RENDER BẢNG TỔNG HỢP (Header 2 dòng + Màu xanh cho Tổng tiết) ---
         function renderTable(users, scheduleMap) {
             const container = document.getElementById('scheduleTableContainer');
-            let html = `<table><thead><tr><th style="min-width:160px;">Giảng Viên</th>${DISPLAY_DAYS.map(d => `<th style="min-width:200px;">${d}</th>`).join('')}<th style="width:80px;">Tổng tiết</th></tr></thead><tbody>`;
+            
+            // Tính toán ngày tháng chính xác cho từng cột
+            const dateObjects = DAYS.map((_, index) => {
+                // Thứ 2 (index 0) là ngày đầu tuần, Thứ 7 (index 5) là cuối tuần. 
+                // Thông thường trong JS, 0 là Chủ nhật, nên offset cho Thứ 2 là 1.
+                return getDateForDayOfWeek(currentWeek, index + 1);
+            });
+
+            let html = `<table>
+                <thead>
+                    <tr>
+                        <th style="min-width:160px; text-align:center;">Giảng Viên</th>
+                        ${dateObjects.map((date, idx) => `
+                            <th class="day-header-cell">
+                                <span class="day-name">${DISPLAY_NAMES[idx]}</span>
+                                <span class="day-date">${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}</span>
+                            </th>
+                        `).join('')}
+                        <th style="width:80px; text-align:center;">Tổng tiết</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+            
             let grandTotals = {};
 
             users.forEach(user => {
@@ -618,7 +673,7 @@
                 html += `<tr><td class="teacher-header" style="text-align:left;">${user.fullname || 'GV'}</td>`;
                 let lecturerTotal = 0;
                 
-                DAYS.forEach(day => {
+                DAYS.forEach((day, idx) => {
                     const dayArr = userData[day] || []; 
                     let displayHtml = '';
                     let dayTotal = 0;
@@ -626,7 +681,6 @@
                     if(Array.isArray(dayArr) && dayArr.length > 0) {
                         dayArr.forEach(entry => {
                             if(entry.period && entry.subject) {
-                                // Format: I: 3KT/25VRC/412/2/Thi kết thúc (Thụ+Giang)
                                 let lineHtml = `<div class="entry-detail-row">`;
                                 lineHtml += `<span class="entry-period-badge">${entry.period}:</span>`;
                                 lineHtml += `<span class="entry-subject">${entry.subject}</span>`;
@@ -648,7 +702,10 @@
                     lecturerTotal += dayTotal;
                     if(!grandTotals[day]) grandTotals[day] = 0;
                     grandTotals[day] += dayTotal;
-                    html += `<td>${displayHtml}<div style="margin-top:8px;font-size:11px;color:#e67e22;border-top:1px dashed #eee;padding-top:5px;text-align:right;">Tổng: ${dayTotal}</div></td>`;
+                    // ✅ Hiển thị Tổng màu xanh dương và thêm chữ "Tiết"
+                    html += `<td>${displayHtml}<div style="margin-top:8px;border-top:1px dashed #eee;padding-top:5px;text-align:right;">
+                        <span class="day-total-display-text">Tổng: ${dayTotal} Tiết</span>
+                    </div></td>`;
                 });
                 html += `<td class="total-cell">${lecturerTotal}</td></tr>`;
             });
@@ -672,7 +729,7 @@
             try {
                 await currentUser.updateProfile({ displayName: newName });
                 await db.collection('users').doc(myUserId).update({ fullname: newName });
-                const rowRef = db.collection('weeks').doc(`week_${new Date().getFullYear()}_${currentWeek}`).collection('rows').doc(myUserId);
+                const rowRef = db.collection('weeks').doc(`week_${currentYear}_${currentWeek}`).collection('rows').doc(myUserId);
                 await rowRef.update({ fullname: newName });
                 document.getElementById('changeNameModal').style.display = 'none';
                 alert("✅ Đã đổi tên thành công!");
