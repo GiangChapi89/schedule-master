@@ -38,7 +38,13 @@
     <div class="container">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
             <h1>⚙️ Quản trị Hệ thống</h1>
-            <button onclick="doLogout()" class="btn-danger">Đăng xuất</button>
+            <div>
+                <!-- Nút Về trang chủ -->
+                <a href="index.html" style="text-decoration:none; margin-right:10px;">
+                    <button style="background:#3498db; color:white; padding:10px 20px; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">🏠 Về trang chủ</button>
+                </a>
+                <button onclick="doLogout()" class="btn-danger">Đăng xuất</button>
+            </div>
         </div>
         
         <div id="adminAlert" style="background: #e8f4fd; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
@@ -95,24 +101,24 @@
     <script>
         const CONFIG_DOC_ID = "master_data";
         let myUserRole = 'user';
-        let myUid = null;
+        let currentUser = null;
 
         auth.onAuthStateChanged(async user => {
             if(!user) { window.location.href = "index.html"; return; }
             
-            myUid = user.uid;
+            currentUser = user;
             const doc = await db.collection('users').doc(user.uid).get();
             if(doc.exists) {
                 myUserRole = doc.data().role || 'user';
                 document.getElementById('adminAlert').innerHTML = `<i class="fas fa-check-circle" style="color:#27ae60;"></i> Đã đăng nhập với quyền: <strong>${myUserRole}</strong>`;
                 
-                // Nếu là Super Admin, hiện bảng phân quyền
+                // 1. Nếu là Super Admin, hiện bảng phân quyền
                 if(myUserRole === 'super_admin') {
                     document.getElementById('superAdminPanel').style.display = 'block';
                     loadUserRoles();
                 }
 
-                // Load danh mục dùng chung (Ai cũng thấy để quản lý)
+                // 2. Load danh mục dùng chung
                 loadMasterData();
 
             } else {
@@ -146,22 +152,22 @@
 
         async function loadMasterData() {
             const doc = await db.collection('configs').doc(CONFIG_DOC_ID).get();
-            if(!doc.exists) return;
-            const data = doc.data();
             
-            const renderList = (id, arr) => {
+            const renderList = (id, key) => {
                 const el = document.getElementById(id);
-                if(arr && arr.length > 0) {
+                if(doc.exists && doc.data()[key]) {
+                    const arr = doc.data()[key];
                     el.innerHTML = arr.map(item => 
-                        `<span class="item-tag">${item} <i class="fas fa-times" onclick="removeOption('${id === 'listSubjects' ? 'subjects' : id === 'listClasses' ? 'classes' : 'rooms'}', '${item}')"></i></span>`
+                        `<span class="item-tag">${item} <i class="fas fa-times" onclick="removeOption('${key}', '${item}')"></i></span>`
                     ).join('');
                 } else {
-                    el.innerHTML = '<span style="color:#888; font-size:14px;">(Trống)</span>';
+                    el.innerHTML = '<span style="color:#888; font-size:14px;">(Chưa có dữ liệu. Hãy thêm bên trên.)</span>';
                 }
             };
-            renderList('listSubjects', data.subjects);
-            renderList('listClasses', data.classes);
-            renderList('listRooms', data.rooms);
+
+            renderList('listSubjects', 'subjects');
+            renderList('listClasses', 'classes');
+            renderList('listRooms', 'rooms');
         }
 
         // --- 2. PHÂN QUYỀN SUPER ADMIN ---
@@ -172,7 +178,7 @@
             container.innerHTML = '';
             
             snap.forEach(doc => {
-                if(doc.id === myUid) return; // Không hiện chính mình
+                if(doc.id === auth.currentUser.uid) return;
                 const data = doc.data();
                 const roleName = data.role === 'super_admin' ? 'Super Admin' : data.role === 'admin' ? 'Admin' : 'User';
                 const roleClass = data.role === 'super_admin' ? 'role-super' : data.role === 'admin' ? 'role-admin' : 'role-user';
