@@ -140,36 +140,67 @@
         // Lắng nghe sự thay đổi trạng thái đăng nhập
         auth.onAuthStateChanged(async (user) => {
             if (user) {
+                // Người dùng đã đăng nhập thành công trên Firebase Auth
                 currentUser = user;
                 myUserId = user.uid;
+                
+                // 1. Cập nhật giao diện Navbar ngay lập tức
                 document.getElementById('userDisplay').innerHTML = `👤 ${user.displayName || user.email}`;
                 document.getElementById('loginToggleBtn').style.display = 'none';
                 document.getElementById('logoutBtn').style.display = 'inline-block';
                 document.getElementById('authContainer').style.display = 'none';
                 document.getElementById('appContainer').style.display = 'block';
 
-                // Kiểm tra Role của user trong Firestore
-                const userDoc = await db.collection('users').doc(myUserId).get();
-                if (userDoc.exists && userDoc.data().role === 'admin') {
-                    currentUserRole = 'admin';
-                    document.getElementById('userDisplay').innerHTML += ` <span style="background:#e67e22;padding:2px 8px;border-radius:4px;font-size:11px;color:white;">Admin</span>`;
+                // 2. Xử lý quyền (Role) và đảm bảo dữ liệu được tạo trong Firestore
+                try {
+                    const userDoc = await db.collection('users').doc(myUserId).get();
                     
-                    // Nếu là Admin, hiển thị nút đi đến trang Admin
-                    const navRight = document.getElementById('navRight');
-                    const adminLink = document.createElement('a');
-                    adminLink.href = 'admin.html';
-                    adminLink.className = 'nav-btn';
-                    adminLink.innerHTML = '⚙️ Quản trị';
-                    adminLink.style.marginLeft = '10px';
-                    navRight.appendChild(adminLink);
-                } else {
-                    currentUserRole = 'user';
+                    if (userDoc.exists) {
+                        // Nếu đã tồn tại, lấy quyền
+                        currentUserRole = userDoc.data().role || 'user';
+                    } else {
+                        // Nếu chưa tồn tại (VD: vừa đăng ký Google lần đầu), tạo mới với role mặc định là 'user'
+                        currentUserRole = 'user';
+                        await db.collection('users').doc(myUserId).set({
+                            fullname: user.displayName || user.email,
+                            email: user.email,
+                            role: 'user',
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                    }
+
+                    // Cập nhật giao diện Admin nếu có quyền
+                    if (currentUserRole === 'admin') {
+                        document.getElementById('userDisplay').innerHTML += ` <span style="background:#e67e22;padding:2px 8px;border-radius:4px;font-size:11px;color:white;">Admin</span>`;
+                        const navRight = document.getElementById('navRight');
+                        // Kiểm tra xem nút Admin đã tồn tại chưa để tránh bị thêm 2 lần
+                        if (!document.querySelector('.admin-nav-link')) {
+                            const adminLink = document.createElement('a');
+                            adminLink.href = 'admin.html';
+                            adminLink.className = 'nav-btn admin-nav-link';
+                            adminLink.innerHTML = '⚙️ Quản trị';
+                            adminLink.style.marginLeft = '10px';
+                            navRight.appendChild(adminLink);
+                        }
+                    } else {
+                        currentUserRole = 'user';
+                    }
+                    
+                    // 3. Tạo dữ liệu tuần cho user nếu chưa có
+                    await createUserRowIfNotExist();
+                    
+                    // 4. Tải dữ liệu bảng
+                    await loadData();
+
+                } catch (error) {
+                    // Nếu gặp lỗi gì đó (ví dụ: mạng chậm khi tạo Firestore), 
+                    // chúng ta vẫn giữ người dùng ở lại trang thay vì đẩy ra ngoài.
+                    console.error("Lỗi khi tải dữ liệu người dùng:", error);
+                    // loadData(); // Vẫn thử load lại dữ liệu
                 }
-                
-                // Kiểm tra xem User đã có dữ liệu trong tuần chưa (Nếu chưa, tạo khung rỗng)
-                await createUserRowIfNotExist();
-                loadData();
+
             } else {
+                // Người dùng chưa đăng nhập (hoặc đã đăng xuất)
                 currentUser = null;
                 currentUserRole = 'user';
                 document.getElementById('userDisplay').innerHTML = '👤 Chưa đăng nhập';
@@ -245,14 +276,35 @@
             }
         }
 
-        // Đăng nhập Google (Dùng Redirect)
+        // Đăng nhập Google (Sử dụng Popup, có dự phòng Redirect)
         document.getElementById('googleLoginBtn').addEventListener('click', async () => {
+            const provider = new firebase.auth.GoogleAuthProvider();
             try {
-                const provider = new firebase.auth.GoogleAuthProvider();
-                await auth.signInWithRedirect(provider);
+                // Thử đăng nhập bằng Popup trước (Thường chạy mượt trên Vercel)
+                const result = await auth.signInWithPopup(provider);
+                // Đăng nhập thành công
+                toggleAuthModal();
+                location.reload();
             } catch (error) {
-                alert("Lỗi chuyển hướng đăng nhập Google: " + error.message);
+                // Nếu bị trình duyệt chặn Popup (Lỗi Cross-Origin), tự động chuyển sang Redirect
+                if (error.code === 'auth/cross-origin-auth') {
+                    console.log("Trình duyệt chặn Popup, đang chuyển sang Redirect...");
+                    await auth.signInWithRedirect(provider);
+                } else {
+                    alert("Lỗi đăng nhập Google: " + error.message);
+                }
             }
+        });
+
+        // Bắt sự kiện quay lại trang sau khi dùng Redirect
+        auth.getRedirectResult().then((result) => {
+            if (result.user) {
+                toggleAuthModal();
+                location.reload();
+            }
+        }).catch((error) => {
+            // Lỗi này thường là do lỗi Rule Firestore, chúng ta sẽ fix ở Bước 2
+            console.error("Lỗi đăng nhập Google (Redirect):", error);
         });
 
         async function doLogout() {
