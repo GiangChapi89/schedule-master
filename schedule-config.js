@@ -1,12 +1,13 @@
 // schedule-config.js
 const firebaseConfig = {
     // 🔴 Điền thông tin cấu hình Firebase của bạn vào đây
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_AUTH_DOMAIN",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_STORAGE_BUCKET",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyDEjnVYAOpBHUV8AKfxxFdCumwGqiH_9C8",
+    authDomain: "schedule-master-3fead.firebaseapp.com",
+    projectId: "schedule-master-3fead",
+    storageBucket: "schedule-master-3fead.firebasestorage.app",
+    messagingSenderId: "56251862481",
+    appId: "1:56251862481:web:38fa80577b41a5248fe4f0",
+    measurementId: "G-76WQ3E4G7V"
 };
 
 firebase.initializeApp(firebaseConfig);
