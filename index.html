@@ -137,43 +137,16 @@
         let currentUser = null, currentUserRole = 'user', myUserId = null;
         const currentWeek = getCurrentWeek();
 
-        auth.onAuthStateChanged(async (user) => {
-            if (user) {
-                currentUser = user; myUserId = user.uid;
-                document.getElementById('userDisplay').innerHTML = `👤 ${user.displayName || user.email}`;
-                document.getElementById('changeNameBtn')?.style.display = 'inline-block';
-                document.getElementById('loginToggleBtn').style.display = 'none';
-                document.getElementById('logoutBtn').style.display = 'inline-block';
-                document.getElementById('authContainer').style.display = 'none';
-                document.getElementById('appContainer').style.display = 'block';
+        // --- AUTH LOGIC ---
+        let currentUser = null;
+        let currentUserRole = 'user';
+        let myUserId = null;
 
-                try {
-                    const userDoc = await db.collection('users').doc(myUserId).get();
-                    if(userDoc.exists) {
-                        currentUserRole = userDoc.data().role || 'user';
-                    } else {
-                        currentUserRole = 'user';
-                        await db.collection('users').doc(myUserId).set({ fullname: user.displayName || user.email, email: user.email, role: 'user' });
-                    }
-
-                    if (currentUserRole === 'admin' || currentUserRole === 'super_admin') {
-                        document.getElementById('userDisplay').innerHTML += ` <span style="background:#e67e22;padding:2px 8px;border-radius:4px;font-size:11px;color:white;">${currentUserRole === 'super_admin' ? 'Super Admin' : 'Admin'}</span>`;
-                        if (!document.querySelector('.admin-nav-link')) {
-                            const adminLink = document.createElement('a'); adminLink.href = 'admin.html'; adminLink.className = 'nav-btn admin-nav-link'; adminLink.innerHTML = '⚙️ Quản trị'; adminLink.style.marginLeft = '10px'; document.getElementById('navRight').appendChild(adminLink);
-                        }
-                    }
-                    await createUserRowIfNotExist();
-                    await loadData();
-                } catch (e) { console.error("Lỗi init user:", e); }
-            } else {
-                currentUser = null;
-                document.getElementById('userDisplay').innerHTML = '👤 Chưa đăng nhập';
-                document.getElementById('loginToggleBtn').style.display = 'inline-block';
-                document.getElementById('logoutBtn').style.display = 'none';
-                document.getElementById('appContainer').style.display = 'none';
-                document.getElementById('authContainer').style.display = 'block';
-            }
-        });
+        function toggleAuthModal() {
+            const modal = document.getElementById('authContainer');
+            if (!modal) return; // Nếu không tìm thấy modal thì dừng
+            modal.style.display = modal.style.display === 'none' ? 'block' : 'none';
+        }
 
         // Đăng ký Email (Phiên bản chống lỗi 400 triệt để)
         async function doRegister() {
@@ -270,7 +243,80 @@
             }
             modal.style.display = modal.style.display === 'none' ? 'block' : 'none';
         }
-        function switchAuthTab(tab) { document.querySelectorAll('.auth-tab, .auth-form-section').forEach(el => el.classList.remove('active')); document.getElementById(tab === 'login' ? 'loginSection' : 'registerSection').classList.add('active'); document.querySelector(`.auth-tabs .auth-tab:${tab === 'login' ? 'first-child' : 'last-child'}`).classList.add('active'); }
+        
+        function switchAuthTab(tab) {
+            document.querySelectorAll('.auth-tab').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.auth-form-section').forEach(el => el.classList.remove('active'));
+            if(tab === 'login') {
+                document.querySelector('.auth-tabs .auth-tab:first-child').classList.add('active');
+                document.getElementById('loginSection').classList.add('active');
+            } else {
+                document.querySelector('.auth-tabs .auth-tab:last-child').classList.add('active');
+                document.getElementById('registerSection').classList.add('active');
+            }
+        }
+
+        // Lắng nghe trạng thái đăng nhập
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                currentUser = user;
+                myUserId = user.uid;
+                
+                // Cập nhật giao diện đăng nhập
+                document.getElementById('userDisplay').innerHTML = `👤 ${user.displayName || user.email}`;
+                
+                // ✅ SỬA LỖI: Dùng Optional Chaining (?.) để tránh lỗi khi chưa load xong HTML
+                document.getElementById('changeNameBtn')?.style.display = 'inline-block';
+                
+                document.getElementById('loginToggleBtn').style.display = 'none';
+                document.getElementById('logoutBtn').style.display = 'inline-block';
+                document.getElementById('authContainer').style.display = 'none';
+                document.getElementById('appContainer').style.display = 'block';
+
+                try {
+                    const userDoc = await db.collection('users').doc(myUserId).get();
+                    if (userDoc.exists) {
+                        currentUserRole = userDoc.data().role || 'user';
+                    } else {
+                        currentUserRole = 'user';
+                        await db.collection('users').doc(myUserId).set({
+                            fullname: user.displayName || user.email,
+                            email: user.email,
+                            role: 'user',
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                    }
+
+                    if (currentUserRole === 'admin' || currentUserRole === 'super_admin') {
+                        document.getElementById('userDisplay').innerHTML += ` <span style="background:#e67e22;padding:2px 8px;border-radius:4px;font-size:11px;color:white;">${currentUserRole === 'super_admin' ? 'Super Admin' : 'Admin'}</span>`;
+                        if (!document.querySelector('.admin-nav-link')) {
+                            const adminLink = document.createElement('a');
+                            adminLink.href = 'admin.html';
+                            adminLink.className = 'nav-btn admin-nav-link';
+                            adminLink.innerHTML = '⚙️ Quản trị';
+                            adminLink.style.marginLeft = '10px';
+                            document.getElementById('navRight').appendChild(adminLink);
+                        }
+                    }
+                    
+                    await createUserRowIfNotExist();
+                    await loadData();
+
+                } catch (error) {
+                    console.error("Lỗi khi tải dữ liệu người dùng:", error);
+                }
+
+            } else {
+                currentUser = null;
+                currentUserRole = 'user';
+                document.getElementById('userDisplay').innerHTML = '👤 Chưa đăng nhập';
+                document.getElementById('changeNameBtn')?.style.display = 'none'; // Ẩn nút đổi tên
+                document.getElementById('loginToggleBtn').style.display = 'inline-block';
+                document.getElementById('logoutBtn').style.display = 'none';
+                document.getElementById('appContainer').style.display = 'none';
+                document.getElementById('authContainer').style.display = 'block';
+            }
+        });
 
         // --- DATA LOGIC ---
         async function createUserRowIfNotExist() {
