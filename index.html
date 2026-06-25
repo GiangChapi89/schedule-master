@@ -86,7 +86,6 @@
                 <div class="auth-tab" onclick="switchAuthTab('register')">Đăng ký</div>
             </div>
             <div id="loginSection" class="auth-form-section active">
-                <!-- Đã đổi thành dùng redirect an toàn để chặn lỗi COOP -->
                 <button class="auth-btn" onclick="doGoogleLogin()" style="background:white; color:#555; border:1px solid #ddd; margin-bottom:15px;">Đăng nhập với Google</button>
                 <div class="auth-divider"><span>hoặc</span></div>
                 <input type="email" id="loginEmail" class="auth-input" placeholder="Email">
@@ -134,16 +133,16 @@
 
     <script src="schedule-config.js"></script>
     <script>
-        // --- AUTH LOGIC ---
+        // --- 1. BIẾN TOÀN CỤC ---
         let currentUser = null;
         let currentUserRole = 'user';
         let myUserId = null;
         const currentWeek = getCurrentWeek();
 
-        // Hàm bật/tắt Modal Đăng nhập (Sửa lỗi dòng 240)
+        // --- 2. CÁC HÀM GIAO DIỆN ---
         function toggleAuthModal() {
             const modal = document.getElementById('authContainer');
-            if (!modal) { console.warn("Auth Container not found"); return; }
+            if (!modal) return; 
             modal.style.display = modal.style.display === 'none' ? 'block' : 'none';
         }
 
@@ -159,33 +158,26 @@
             }
         }
 
-        // Đăng ký Email
+        // --- 3. ĐĂNG KÝ / ĐĂNG NHẬP ---
         async function doRegister() {
             const name = document.getElementById('regFullName').value.trim();
             const email = document.getElementById('regEmail').value.trim();
             const pass = document.getElementById('regPassword').value.trim();
-            
-            if(!name || !email || !pass) return alert("❌ Vui lòng điền đầy đủ họ tên, email và mật khẩu!");
-            
-            const normalizedEmail = email.toLowerCase();
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(normalizedEmail)) return alert("❌ Email không hợp lệ.");
-            if (pass.length < 6 || pass.includes(' ')) return alert("❌ Mật khẩu phải có ít nhất 6 ký tự và không chứa dấu cách!");
+            if(!name || !email || !pass) return alert("❌ Vui lòng điền đầy đủ!");
+            if(pass.length < 6) return alert("❌ Mật khẩu phải có ít nhất 6 ký tự!");
 
             try {
-                const cred = await auth.createUserWithEmailAndPassword(normalizedEmail, pass);
+                const cred = await auth.createUserWithEmailAndPassword(email, pass);
                 await cred.user.updateProfile({ displayName: name });
                 await db.collection('users').doc(cred.user.uid).set({
-                    fullname: name,
-                    email: normalizedEmail,
-                    role: 'user',
+                    fullname: name, email: email, role: 'user',
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 alert("🎉 Đăng ký thành công!");
                 toggleAuthModal(); 
             } catch(e) {
-                let msg = "❌ Đăng ký thất bại: ";
-                if (e.code === 'auth/email-already-in-use') msg += "Email đã tồn tại.";
+                let msg = "❌ Lỗi: ";
+                if(e.code === 'auth/email-already-in-use') msg += "Email đã tồn tại.";
                 else msg += e.message;
                 alert(msg);
             }
@@ -198,17 +190,15 @@
                     document.getElementById('loginPassword').value.trim()
                 ); 
                 toggleAuthModal(); 
-            }
-            catch(e) { 
-                let msg = "❌ Đăng nhập thất bại: ";
-                if (e.code === 'auth/user-not-found') msg += "Email chưa được đăng ký.";
-                else if (e.code === 'auth/wrong-password') msg += "Sai mật khẩu.";
+            } catch(e) {
+                let msg = "❌ Lỗi: ";
+                if(e.code === 'auth/wrong-password') msg += "Sai mật khẩu.";
+                else if(e.code === 'auth/user-not-found') msg += "Email chưa đăng ký.";
                 else msg += e.message;
-                alert(msg); 
+                alert(msg);
             }
         }
 
-        // 🛡️ ĐĂNG NHẬP GOOGLE: Chuyển từ Popup sang Redirect để chặn lỗi COOP
         async function doGoogleLogin() {
             try {
                 const provider = new firebase.auth.GoogleAuthProvider();
@@ -218,26 +208,21 @@
             }
         }
 
-        // 🛡️ Bắt sự kiện quay lại trang sau khi Redirect Google thành công
         auth.getRedirectResult().then((result) => {
-            if (result.user) {
-                // Nếu đăng nhập Google thành công, tải lại trang
-                location.reload();
-            }
+            if (result.user) location.reload();
         }).catch((error) => {
             console.error("Lỗi Redirect Google:", error);
         });
 
         async function doLogout() { await auth.signOut(); location.reload(); }
 
-        // Lắng nghe trạng thái đăng nhập
+        // --- 4. AUTH STATE CHANGED ---
         auth.onAuthStateChanged(async (user) => {
             if (user) {
                 currentUser = user;
                 myUserId = user.uid;
-                
                 document.getElementById('userDisplay').innerHTML = `👤 ${user.displayName || user.email}`;
-                document.getElementById('changeNameBtn')?.style.display = 'inline-block';
+                document.getElementById('changeNameBtn').style.display = 'inline-block';
                 document.getElementById('loginToggleBtn').style.display = 'none';
                 document.getElementById('logoutBtn').style.display = 'inline-block';
                 document.getElementById('authContainer').style.display = 'none';
@@ -245,9 +230,8 @@
 
                 try {
                     const userDoc = await db.collection('users').doc(myUserId).get();
-                    if (userDoc.exists) {
-                        currentUserRole = userDoc.data().role || 'user';
-                    } else {
+                    if (userDoc.exists) currentUserRole = userDoc.data().role || 'user';
+                    else {
                         currentUserRole = 'user';
                         await db.collection('users').doc(myUserId).set({
                             fullname: user.displayName || user.email,
@@ -263,22 +247,18 @@
                             adminLink.href = 'admin.html';
                             adminLink.className = 'nav-btn admin-nav-link';
                             adminLink.innerHTML = '⚙️ Quản trị';
+                            adminLink.style.marginLeft = '10px';
                             document.getElementById('navRight').appendChild(adminLink);
                         }
                     }
-                    
                     await createUserRowIfNotExist();
                     await loadData();
-
-                } catch (error) {
-                    console.error("Lỗi khi tải dữ liệu người dùng:", error);
-                }
-
+                } catch (error) { console.error("Lỗi tải user:", error); }
             } else {
                 currentUser = null;
                 currentUserRole = 'user';
                 document.getElementById('userDisplay').innerHTML = '👤 Chưa đăng nhập';
-                document.getElementById('changeNameBtn')?.style.display = 'none';
+                document.getElementById('changeNameBtn').style.display = 'none';
                 document.getElementById('loginToggleBtn').style.display = 'inline-block';
                 document.getElementById('logoutBtn').style.display = 'none';
                 document.getElementById('appContainer').style.display = 'none';
@@ -286,7 +266,7 @@
             }
         });
 
-        // --- DATA LOGIC ---
+        // --- 5. LOGIC DỮ LIỆU ---
         async function createUserRowIfNotExist() {
             const weekRef = db.collection('weeks').doc(`week_${new Date().getFullYear()}_${currentWeek}`);
             const weekDoc = await weekRef.get();
@@ -352,12 +332,12 @@
             container.innerHTML = html;
         }
 
-        // --- RENDER FORM NHẬP LIỆU ---
+        // --- 6. RENDER FORM NHẬP LIỆU ---
         let globalCatalogs = { subjects: [], classes: [], rooms: [] };
 
         async function renderMyForm() {
             const section = document.getElementById('myInputSection');
-            section.style.display = 'block';
+            section.style.display = 'block'; // Admin/Super Admin vẫn thấy form
 
             const doc = await db.collection('configs').doc('master_data').get();
             if(doc.exists) globalCatalogs = doc.data();
@@ -373,10 +353,7 @@
                     <div class="period-rows-container">
                         <div class="period-row">
                             <div class="row" style="display:flex; flex-wrap:wrap; gap:5px;">
-                                <div style="flex: 1 1 100%;">
-                                    <label>Cặp tiết</label>
-                                    <select class="period-select">${periods.map(p => `<option value="${p}">${p}</option>`).join('')}</select>
-                                </div>
+                                <div style="flex: 1 1 100%;"><label>Cặp tiết</label><select class="period-select">${periods.map(p => `<option value="${p}">${p}</option>`).join('')}</select></div>
                                 <div style="flex: 1 1 100%;">
                                     <label>Môn</label>
                                     <select class="subject-select" onchange="toggleCustomInput(this)">
@@ -466,7 +443,7 @@
             } catch(e) { alert("Lỗi lưu: " + e.message); }
         }
 
-        // --- CHỨC NĂNG ĐỔI TÊN ---
+        // --- 7. CHỨC NĂNG ĐỔI TÊN ---
         function openChangeNameModal() {
             document.getElementById('newDisplayName').value = currentUser.displayName || '';
             document.getElementById('changeNameModal').style.display = 'flex';
