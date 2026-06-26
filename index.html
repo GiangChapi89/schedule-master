@@ -67,18 +67,18 @@
             background: white; 
             border-radius: 8px; 
             box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-            /* Tăng kích thước thanh cuộn để dễ nhìn trên mobile */
             padding-bottom: 15px;
-            /* Hỗ trợ cuộn mượt trên iOS */
             -webkit-overflow-scrolling: touch; 
         }
+        
         table { 
             width: 100%; 
             border-collapse: collapse; 
             font-size: 14px; 
             table-layout: auto; 
-            min-width: 800px; /* Đảm bảo bảng không bị bóp quá nhỏ */
+            min-width: 800px; 
         }
+        
         th { 
             background: #2c3e50; 
             color: white; 
@@ -87,25 +87,61 @@
             position: relative; 
             white-space: nowrap; 
         }
-        td, th { border: 1px solid #ddd; padding: 8px 10px; text-align: left; vertical-align: top; }
         
-        /* ===== STICKY COLUMN 1: CỘT GIẢNG VIÊN (BÊN TRÁI) ===== */
-        th:first-child, 
+        td, th { 
+            border: 1px solid #ddd; 
+            padding: 8px 10px; 
+            text-align: left; 
+            vertical-align: top; 
+        }
+        
+        /* ===== CHỈ GIỮ LẠI STICKY CHO CỘT ĐẦU TIÊN (BÊN TRÁI) ===== */
+        /* Header cột đầu tiên */
+        th:first-child {
+            position: sticky;
+            left: 0;
+            z-index: 20;
+            background-color: #34495e;
+            border-right: 2px solid #ddd;
+        }
+        
+        /* Dữ liệu cột đầu tiên (Tên giảng viên) */
         td:first-child, 
         .teacher-header {
             position: sticky;
             left: 0;
-            z-index: 20; /* Ưu tiên cao hơn nội dung bên dưới */
-            background-color: #34495e; /* Màu nền cho header */
+            z-index: 10;
             border-right: 2px solid #ddd;
+            min-width: 140px;
         }
-        td:first-child {
-            background-color: #f1f2f6; /* Màu nền cho cột tên giảng viên */
-        }
-        .teacher-header { background: #34495e; color: white; font-weight: bold; text-align: center; min-width: 140px; position: sticky; left: 0; z-index: 20; border-right: 2px solid #ddd; }
-        .day-header-cell { padding: 6px 10px; text-align: center; min-width: 120px; background: #2c3e50; color: white; }
         
-        .entry-detail-row { padding: 4px 0; border-bottom: 1px solid #eee; font-size: 13px; display: flex; flex-wrap: wrap; gap: 3px; line-height: 1.4; }
+        /* Màu sắc riêng cho phần dữ liệu cột tên */
+        td:first-child {
+            background-color: #f1f2f6;
+            color: #333333;          /* Màu chữ đen đậm để nhìn rõ */
+            font-weight: 600;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        /* ===== Định dạng các cột giữa ===== */
+        .day-header-cell { 
+            padding: 6px 10px; 
+            text-align: center; 
+            min-width: 120px; 
+            background: #2c3e50; 
+            color: white; 
+        }
+        
+        .entry-detail-row { 
+            padding: 4px 0; 
+            border-bottom: 1px solid #eee; 
+            font-size: 13px; 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 3px; 
+            line-height: 1.4; 
+        }
         .entry-detail-row:last-child { border-bottom: none; }
         .entry-period-badge { font-weight: bold; color: #e67e22; margin-right: 5px; }
         .entry-subject { font-weight: 600; }
@@ -114,12 +150,19 @@
         
         .total-cell { font-weight: bold; color: #2980b9; text-align: center; }
         .day-total-display-text { font-weight: bold; color: #2980b9; font-size: 15px; }
+        
         .grand-total-row { background: #34495e; color: white; font-weight: bold; font-size: 15px; text-align: center; }
+        .grand-total-row td:last-child {
+            background-color: #34495e;
+            color: white;
+        }
+        
         .btn-load { background: #f1c40f; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .btn-load:hover { background: #d4ac0d; }
 
+        /* ===== RESPONSIVE CHO MOBILE ===== */
         @media (max-width: 768px) {
-            .teacher-header { min-width: 100px; }
+            td:first-child, .teacher-header { min-width: 100px; }
             .day-header-cell { min-width: 80px; }
             .filter-wrapper { flex-direction: column; align-items: stretch; }
             .filter-group select { width: 100%; }
