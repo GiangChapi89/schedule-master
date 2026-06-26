@@ -6,6 +6,7 @@
     <title>📅 Quản lý lịch giảng dạy Năm học</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" href="data:,">
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
         .container { max-width: 1400px; margin: auto; background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
@@ -323,7 +324,10 @@
                 
                 // ✅ SỬA LỖI DÒNG 226: Dùng setTimeout và Optional Chaining để chặn lỗi null
                 setTimeout(() => {
-                    document.getElementById('changeNameBtn')?.style.display = 'inline-block';
+                    const changeNameBtn = document.getElementById('changeNameBtn');
+                    if (changeNameBtn) {
+                        changeNameBtn.style.display = 'inline-block';
+                    }
                 }, 100);
 
                 document.getElementById('loginToggleBtn').style.display = 'none';
