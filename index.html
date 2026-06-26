@@ -60,11 +60,48 @@
         .btn-danger { background: #e74c3c; color: white; }
 
         /* ===== BẢNG TỔNG HỢP ===== */
-        .table-wrapper { overflow-x: auto; margin-top: 30px; position: relative; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
-        table { width: 100%; border-collapse: collapse; font-size: 14px; table-layout: auto; }
-        th { background: #2c3e50; color: white; padding: 8px 10px; text-align: center; position: relative; white-space: nowrap; }
+        .table-wrapper { 
+            overflow-x: auto; 
+            margin-top: 30px; 
+            position: relative; 
+            background: white; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            /* Tăng kích thước thanh cuộn để dễ nhìn trên mobile */
+            padding-bottom: 15px;
+            /* Hỗ trợ cuộn mượt trên iOS */
+            -webkit-overflow-scrolling: touch; 
+        }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            font-size: 14px; 
+            table-layout: auto; 
+            min-width: 800px; /* Đảm bảo bảng không bị bóp quá nhỏ */
+        }
+        th { 
+            background: #2c3e50; 
+            color: white; 
+            padding: 8px 10px; 
+            text-align: center; 
+            position: relative; 
+            white-space: nowrap; 
+        }
         td, th { border: 1px solid #ddd; padding: 8px 10px; text-align: left; vertical-align: top; }
         
+        /* ===== STICKY COLUMN 1: CỘT GIẢNG VIÊN (BÊN TRÁI) ===== */
+        th:first-child, 
+        td:first-child, 
+        .teacher-header {
+            position: sticky;
+            left: 0;
+            z-index: 20; /* Ưu tiên cao hơn nội dung bên dưới */
+            background-color: #34495e; /* Màu nền cho header */
+            border-right: 2px solid #ddd;
+        }
+        td:first-child {
+            background-color: #f1f2f6; /* Màu nền cho cột tên giảng viên */
+        }
         .teacher-header { background: #34495e; color: white; font-weight: bold; text-align: center; min-width: 140px; position: sticky; left: 0; z-index: 20; border-right: 2px solid #ddd; }
         .day-header-cell { padding: 6px 10px; text-align: center; min-width: 120px; background: #2c3e50; color: white; }
         
