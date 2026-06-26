@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📅 Quản lý lịch giảng dạy tuần</title>
+    <title>📅 Quản lý lịch giảng dạy Năm học</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -33,60 +33,42 @@
         #appContainer { display: none; }
         .user-badge { background: #27ae60; padding: 4px 12px; border-radius: 20px; font-size: 12px; color: white; margin-left: 10px; }
 
-        /* ===== ADMIN SELECTOR ===== */
-        #adminUserSelectorWrapper { display: none; margin-bottom: 20px; padding: 15px; background: #e8f4fd; border-radius: 8px; border: 1px solid #bce0fd; }
-        #adminUserSelectorWrapper label { font-weight: bold; margin-right: 10px; }
-        #adminUserSelectorWrapper select { padding: 8px 12px; border-radius: 4px; border: 1px solid #ccc; min-width: 200px; }
+        /* ===== BỘ LỌC ===== */
+        .filter-wrapper { background: #f8f9fa; padding: 15px 20px; border-radius: 8px; margin-bottom: 15px; display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-end; border: 1px solid #e9ecef; }
+        .filter-group { display: flex; flex-direction: column; gap: 4px; }
+        .filter-group label { font-size: 12px; font-weight: 600; color: #555; }
+        .filter-group select { padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; min-width: 140px; background: #fff; }
 
-        /* ===== FORM NHẬP LIỆU DẠNG CỘT DỌC (Stacked Form) ===== */
+        /* ===== FORM NHẬP LIỆU ===== */
         #myScheduleForm { display: flex; flex-direction: column; gap: 30px; margin-top: 20px; }
-        
         .day-schedule-block { background: #f8f9fa; border-radius: 12px; border: 1px solid #e9ecef; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
-        
         .day-header { padding-bottom: 15px; margin-bottom: 15px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
         .day-header h5 { margin: 0; color: #2c3e50; font-weight: 700; font-size: 1.1rem; }
         .day-header .day-controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-        
         .period-rows-container { display: flex; flex-direction: column; gap: 15px; min-height: 20px; }
-        
-        /* Một khối cặp tiết (Dạng cột dọc) */
         .period-row-block { background: white; padding: 15px; border-radius: 8px; border: 1px solid #e9ecef; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; position: relative; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         .period-row-block .remove-row-btn { position: absolute; top: -10px; right: -10px; background: #e74c3c; color: white; border: none; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-        
         .field-group { display: flex; flex-direction: column; gap: 4px; }
         .field-group label { font-size: 12px; font-weight: 600; color: #555; }
         .field-group select, .field-group input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; box-sizing: border-box; background: #fff; }
         .field-group .custom-input { margin-top: 5px; }
-        
         .day-total-display { padding: 15px 20px; background: #fff3cd; margin-top: 20px; border-radius: 8px; font-weight: bold; color: #856404; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-        .day-total-display .actions { display: flex; gap: 8px; }
-        
         .btn-sm { padding: 6px 14px; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 13px; }
         .btn-primary { background: #3498db; color: white; }
-        .btn-primary:hover { background: #2980b9; }
         .btn-success { background: #27ae60; color: white; }
-        .btn-success:hover { background: #219a52; }
         .btn-danger { background: #e74c3c; color: white; }
-        .btn-danger:hover { background: #c0392b; }
 
         /* ===== BẢNG TỔNG HỢP ===== */
-        .table-wrapper { overflow-x: auto; margin-top: 30px; position: relative; }
-        /* Resizable Handle (Thanh kéo thả) */
-        th .resize-handle { position: absolute; right: 0; top: 0; height: 100%; width: 5px; cursor: col-resize; background: transparent; z-index: 10; }
-        th .resize-handle:hover, th .resize-handle.active { background: rgba(255,255,255,0.5); }
-        
-        table { width: 100%; border-collapse: collapse; font-size: 14px; table-layout: fixed; }
-        th { background: #2c3e50; color: white; padding: 8px 10px; text-align: center; position: relative; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .table-wrapper { overflow-x: auto; margin-top: 30px; position: relative; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; table-layout: auto; }
+        th { background: #2c3e50; color: white; padding: 8px 10px; text-align: center; position: relative; white-space: nowrap; }
         td, th { border: 1px solid #ddd; padding: 8px 10px; text-align: left; vertical-align: top; }
         
-        /* Header ngày 2 dòng */
-        .day-header-cell { padding: 6px 10px; text-align: center; min-width: 140px; background: #2c3e50; color: white; }
+        .teacher-header { background: #34495e; color: white; font-weight: bold; text-align: center; min-width: 140px; position: sticky; left: 0; z-index: 20; border-right: 2px solid #ddd; }
+        .day-header-cell { padding: 6px 10px; text-align: center; min-width: 120px; background: #2c3e50; color: white; }
         .day-header-cell .day-name { font-size: 14px; font-weight: 700; display: block; margin-bottom: 2px; }
         .day-header-cell .day-date { font-size: 12px; font-weight: 400; color: #b0c4de; display: block; }
-        
-        .teacher-header { background: #34495e; color: white; font-weight: bold; text-align: center; }
-        
-        /* Chi tiết hiển thị trong ô của bảng tổng hợp */
+
         .entry-detail-row { padding: 4px 0; border-bottom: 1px solid #eee; font-size: 13px; display: flex; flex-wrap: wrap; gap: 3px; line-height: 1.4; }
         .entry-detail-row:last-child { border-bottom: none; }
         .entry-period-badge { font-weight: bold; color: #e67e22; margin-right: 5px; }
@@ -94,37 +76,32 @@
         .entry-meta { color: #555; font-size: 12px; }
         .entry-note { font-style: italic; color: #2980b9; }
         
-        /* Màu xanh dương cho tổng tiết */
         .total-cell { font-weight: bold; color: #2980b9; text-align: center; }
         .day-total-display-text { font-weight: bold; color: #2980b9; font-size: 15px; }
-        .day-total-display-text .unit { font-weight: 400; color: #555; font-size: 13px; }
-
         .grand-total-row { background: #34495e; color: white; font-weight: bold; font-size: 15px; text-align: center; }
         .btn-load { background: #f1c40f; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .btn-load:hover { background: #d4ac0d; }
 
         @media (max-width: 768px) {
+            .teacher-header { min-width: 100px; }
+            .day-header-cell { min-width: 80px; }
+            .filter-wrapper { flex-direction: column; align-items: stretch; }
+            .filter-group select { width: 100%; }
             .period-row-block { grid-template-columns: 1fr; }
-            .day-header { flex-direction: column; align-items: flex-start; }
-            .day-total-display { flex-direction: column; align-items: flex-start; }
-            .day-header-cell { min-width: 100px; }
         }
     </style>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    
-    <!-- Thư viện hỗ trợ kéo thả cột -->
-    <script src="https://cdn.jsdelivr.net/npm/colresizable@1.6.0/colResizable.min.js"></script>
 </head>
 <body>
     <div class="container">
         <div class="navbar">
-            <h2>📅 Lịch giảng dạy Tuần hiện tại</h2>
+            <h2>📅 Quản lý lịch giảng dạy</h2>
             <div class="nav-right" id="navRight">
                 <span id="userDisplay" style="font-weight: 500; display:flex; align-items:center; gap:8px;">
                     👤 Chưa đăng nhập
-                    <button id="changeNameBtn" onclick="openChangeNameModal()" style="display:none; background:rgba(255,255,255,0.2); border:none; color:white; padding:4px 10px; border-radius:4px; font-size:12px; cursor:pointer;">✏️</button>
+                    <button id="changeNameBtn" onclick="openChangeNameModal()" style="display:none;">✏️</button>
                 </span>
                 <button class="nav-btn" id="loginToggleBtn" onclick="toggleAuthModal()">🔑 Đăng nhập</button>
                 <button class="nav-btn btn-danger-outline" id="logoutBtn" style="display:none;" onclick="doLogout()">🚪 Đăng xuất</button>
@@ -152,24 +129,54 @@
         </div>
 
         <div id="appContainer">
-            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
-                <h3 style="margin:0;">Bảng tổng hợp theo tuần</h3>
-                <button class="btn-load" onclick="loadData()"><i class="fas fa-sync"></i> Làm mới dữ liệu</button>
-            </div>
-            
-            <div id="scheduleTableContainer" class="table-wrapper">
-                <p style="text-align: center; color: #888; padding: 40px 0;">Đang tải dữ liệu...</p>
+            <!-- ===== BẢNG TỔNG HỢP VÀ BỘ LỌC ===== -->
+            <div class="filter-wrapper">
+                <div class="filter-group">
+                    <label>📚 Niên khóa</label>
+                    <select id="filterYear" onchange="loadData()">
+                        <option value="">Chọn niên khóa...</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>📅 Tuần</label>
+                    <select id="filterWeek" onchange="loadData()">
+                        <option value="">Chọn tuần...</option>
+                        <option value="all">Tất cả tuần</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>👤 Giảng viên</label>
+                    <select id="filterLecturer" onchange="loadData()">
+                        <option value="all">Tất cả giảng viên</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>📌 Thứ trong tuần</label>
+                    <select id="filterDay" onchange="loadData()">
+                        <option value="all">Tất cả các ngày</option>
+                        <option value="Mon">Thứ 2</option>
+                        <option value="Tue">Thứ 3</option>
+                        <option value="Wed">Thứ 4</option>
+                        <option value="Thu">Thứ 5</option>
+                        <option value="Fri">Thứ 6</option>
+                        <option value="Sat">Thứ 7</option>
+                    </select>
+                </div>
             </div>
 
-            <!-- Bộ chọn giảng viên dành cho Admin -->
-            <div id="adminUserSelectorWrapper">
+            <div id="scheduleTableContainer" class="table-wrapper">
+                <p style="text-align: center; color: #888; padding: 40px 0;">Vui lòng chọn Niên khóa và Tuần để tải dữ liệu.</p>
+            </div>
+
+            <!-- ===== ADMIN USER SELECTOR ===== -->
+            <div id="adminUserSelectorWrapper" style="display:none; margin-top:20px; padding:15px; background:#e8f4fd; border-radius:8px;">
                 <label for="adminUserSelect">👤 Chọn giảng viên cần xem/sửa:</label>
                 <select id="adminUserSelect" onchange="onAdminSelectUser()">
                     <option value="">-- Chọn tên --</option>
                 </select>
-                <span style="font-size:13px; color:#666; margin-left:10px;">(Bạn đang ở chế độ Quản trị viên. Hãy chọn tên để thao tác thay họ.)</span>
             </div>
 
+            <!-- ===== FORM NHẬP LIỆU ===== -->
             <div id="myInputSection" style="margin-top: 40px; border-top: 2px dashed #ccc; padding-top: 30px; display:none;">
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
                     <h4 style="color:#2c3e50; margin:0; display:flex; align-items:center; gap:10px;">✏️ Cập nhật lịch dạy <span class="user-badge">Chỉ bạn thấy</span></h4>
@@ -178,12 +185,10 @@
                 <div id="myScheduleForm"></div>
             </div>
             
-            <!-- Modal Đổi tên -->
-            <div id="changeNameModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:999; justify-content:center; align-items:center;">
-                <div style="background:white; padding:30px; border-radius:12px; max-width:400px; width:90%; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
-                    <h3 style="margin-top:0; color:#2c3e50;">✏️ Đổi tên hiển thị</h3>
-                    <p style="color:#666; font-size:14px;">Tên mới sẽ được cập nhật trên bảng tổng hợp và thanh điều hướng.</p>
-                    <input type="text" id="newDisplayName" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px; margin-bottom:15px; box-sizing:border-box;" placeholder="Nhập tên mới...">
+            <div id="changeNameModal" style="display:none;">
+                <div style="background:white; padding:30px; border-radius:12px; max-width:400px; margin:auto; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+                    <h3>✏️ Đổi tên hiển thị</h3>
+                    <input type="text" id="newDisplayName" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px; margin:10px 0;" placeholder="Nhập tên mới...">
                     <div style="display:flex; gap:10px; justify-content:flex-end;">
                         <button onclick="document.getElementById('changeNameModal').style.display='none'" style="background:#95a5a6; color:white; border:none; padding:8px 20px; border-radius:6px; cursor:pointer;">Hủy</button>
                         <button onclick="updateMyName()" style="background:#3498db; color:white; border:none; padding:8px 20px; border-radius:6px; cursor:pointer;">Lưu tên</button>
@@ -196,155 +201,51 @@
     <script src="schedule-config.js"></script>
     <script>
         // --- 1. BIẾN TOÀN CỤC ---
-        let currentUser = null;
-        let currentUserRole = 'user';
-        let myUserId = null;
-        // Biến lưu ID của người dùng đang được Admin thao tác
-        let editingUserId = null;
-        
-        const currentWeek = getCurrentWeek();
-        const currentYear = new Date().getFullYear();
+        let currentUser = null, currentUserRole = 'user', myUserId = null, editingUserId = null;
         let globalCatalogs = { subjects: [], classes: [], rooms: [] };
+        let availableYears = [], availableWeeks = [];
         
-        // Mảng ngày trong tuần
-        const DAYS = ['Thu_2', 'Thu_3', 'Thu_4', 'Thu_5', 'Thu_6', 'Thu_7'];
-        const DISPLAY_NAMES = ['THỨ 2', 'THỨ 3', 'THỨ 4', 'THỨ 5', 'THỨ 6', 'THỨ 7'];
         const SLOTS_PER_PERIOD = 2;
+        const DAY_MAP = { 'Mon': 'Thứ 2', 'Tue': 'Thứ 3', 'Wed': 'Thứ 4', 'Thu': 'Thứ 5', 'Fri': 'Thứ 6', 'Sat': 'Thứ 7' };
+        const DAY_KEYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const DISPLAY_DAYS = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
 
         // --- 2. CÁC HÀM GIAO DIỆN ---
-        function toggleAuthModal() {
-            const modal = document.getElementById('authContainer');
-            if (!modal) return; 
-            modal.style.display = modal.style.display === 'none' ? 'block' : 'none';
-        }
-
+        function toggleAuthModal() { const modal = document.getElementById('authContainer'); if (modal) modal.style.display = modal.style.display === 'none' ? 'block' : 'none'; }
         function switchAuthTab(tab) {
-            document.querySelectorAll('.auth-tab').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.auth-form-section').forEach(el => el.classList.remove('active'));
-            if(tab === 'login') {
-                document.querySelector('.auth-tabs .auth-tab:first-child').classList.add('active');
-                document.getElementById('loginSection').classList.add('active');
-            } else {
-                document.querySelector('.auth-tabs .auth-tab:last-child').classList.add('active');
-                document.getElementById('registerSection').classList.add('active');
-            }
+            document.querySelectorAll('.auth-tab, .auth-form-section').forEach(el => el.classList.remove('active'));
+            document.querySelector(tab === 'login' ? '.auth-tabs .auth-tab:first-child' : '.auth-tabs .auth-tab:last-child').classList.add('active');
+            document.getElementById(tab === 'login' ? 'loginSection' : 'registerSection').classList.add('active');
         }
 
-        // --- 3. ĐĂNG KÝ / ĐĂNG NHẬP ---
-        async function doRegister() {
-            const name = document.getElementById('regFullName').value.trim();
-            const email = document.getElementById('regEmail').value.trim();
-            const pass = document.getElementById('regPassword').value.trim();
-            if(!name || !email || !pass) return alert("❌ Vui lòng điền đầy đủ!");
-            if(pass.length < 6) return alert("❌ Mật khẩu phải có ít nhất 6 ký tự!");
-            try {
-                const cred = await auth.createUserWithEmailAndPassword(email, pass);
-                await cred.user.updateProfile({ displayName: name });
-                await db.collection('users').doc(cred.user.uid).set({
-                    fullname: name, email: email, role: 'user',
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                alert("🎉 Đăng ký thành công!");
-                toggleAuthModal(); 
-            } catch(e) {
-                let msg = "❌ Lỗi: ";
-                if(e.code === 'auth/email-already-in-use') msg += "Email đã tồn tại.";
-                else msg += e.message;
-                alert(msg);
-            }
-        }
-
-        async function doLogin() {
-            try { 
-                await auth.signInWithEmailAndPassword(
-                    document.getElementById('loginEmail').value.trim(), 
-                    document.getElementById('loginPassword').value.trim()
-                ); 
-                toggleAuthModal(); 
-                location.reload();
-            } catch(e) {
-                let msg = "❌ Lỗi: ";
-                if(e.code === 'auth/wrong-password') msg += "Sai mật khẩu.";
-                else if(e.code === 'auth/user-not-found') msg += "Email chưa đăng ký.";
-                else msg += e.message;
-                alert(msg);
-            }
-        }
-
-        async function doGoogleLogin() {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            try {
-                const result = await auth.signInWithPopup(provider);
-                if (result.user) location.reload();
-            } catch (error) {
-                if (error.code === 'auth/popup-blocked' || error.code === 'auth/cross-origin-auth') {
-                    alert("Popup bị chặn, chuyển hướng...");
-                    try { await auth.signInWithRedirect(provider); } catch(e) { alert("Lỗi: " + e.message); }
-                } else {
-                    alert("Lỗi Google: " + error.message);
-                }
-            }
-        }
-
-        auth.getRedirectResult().then((result) => {
-            if (result.user) location.reload();
-        }).catch((error) => {
-            console.error("Lỗi Redirect Google:", error);
-        });
-
-        async function doLogout() { await auth.signOut(); location.reload(); }
-
-        // --- 4. AUTH STATE CHANGED ---      
+        // --- 3. AUTH STATE CHANGED ---      
         auth.onAuthStateChanged(async (user) => {
-            const changeNameBtnElement = document.getElementById('changeNameBtn');
             if (user) {
-                currentUser = user;
-                myUserId = user.uid;
-                editingUserId = user.uid; // Mặc định chỉnh sửa lịch của chính mình
-                
+                currentUser = user; myUserId = user.uid; editingUserId = user.uid;
                 document.getElementById('userDisplay').innerHTML = `👤 ${user.displayName || user.email}`;
-                if (changeNameBtnElement) changeNameBtnElement.style.display = 'inline-block';
-                
+                document.getElementById('changeNameBtn').style.display = 'inline-block';
                 document.getElementById('loginToggleBtn').style.display = 'none';
                 document.getElementById('logoutBtn').style.display = 'inline-block';
                 document.getElementById('authContainer').style.display = 'none';
                 document.getElementById('appContainer').style.display = 'block';
 
-                try {
-                    const userDoc = await db.collection('users').doc(myUserId).get();
-                    if (userDoc.exists) currentUserRole = userDoc.data().role || 'user';
-                    else {
-                        currentUserRole = 'user';
-                        await db.collection('users').doc(myUserId).set({
-                            fullname: user.displayName || user.email,
-                            email: user.email,
-                            role: 'user'
-                        });
-                    }
+                const userDoc = await db.collection('users').doc(myUserId).get();
+                if (userDoc.exists) currentUserRole = userDoc.data().role || 'user';
+                else { currentUserRole = 'user'; await db.collection('users').doc(myUserId).set({ fullname: user.displayName || user.email, email: user.email, role: 'user' }); }
 
-                    if (currentUserRole === 'admin' || currentUserRole === 'super_admin') {
-                        document.getElementById('userDisplay').innerHTML += ` <span style="background:#e67e22;padding:2px 8px;border-radius:4px;font-size:11px;color:white;">${currentUserRole === 'super_admin' ? 'Super Admin' : 'Admin'}</span>`;
-                        if (!document.querySelector('.admin-nav-link')) {
-                            const adminLink = document.createElement('a');
-                            adminLink.href = 'admin.html';
-                            adminLink.className = 'nav-btn admin-nav-link';
-                            adminLink.innerHTML = '⚙️ Quản trị';
-                            adminLink.style.marginLeft = '10px';
-                            document.getElementById('navRight').appendChild(adminLink);
-                        }
-                        // Hiển thị bộ chọn giảng viên cho Admin
-                        document.getElementById('adminUserSelectorWrapper').style.display = 'block';
-                        await loadAdminUserList();
+                if (currentUserRole === 'admin' || currentUserRole === 'super_admin') {
+                    document.getElementById('userDisplay').innerHTML += ` <span style="background:#e67e22;">${currentUserRole === 'super_admin' ? 'Super Admin' : 'Admin'}</span>`;
+                    if (!document.querySelector('.admin-nav-link')) {
+                        const adminLink = document.createElement('a'); adminLink.href = 'admin.html'; adminLink.className = 'nav-btn admin-nav-link'; adminLink.innerHTML = '⚙️ Quản trị'; document.getElementById('navRight').appendChild(adminLink);
                     }
-                    
-                    await loadCatalogs();
-                    await loadData();
-                } catch (error) { console.error("Lỗi tải user:", error); }
+                    document.getElementById('adminUserSelectorWrapper').style.display = 'block';
+                    await loadAdminUserList();
+                }
+                await loadCatalogs(); await loadFilterData();
             } else {
-                currentUser = null;
-                currentUserRole = 'user';
+                currentUser = null; currentUserRole = 'user';
                 document.getElementById('userDisplay').innerHTML = '👤 Chưa đăng nhập';
-                if (changeNameBtnElement) changeNameBtnElement.style.display = 'none';
+                document.getElementById('changeNameBtn').style.display = 'none';
                 document.getElementById('loginToggleBtn').style.display = 'inline-block';
                 document.getElementById('logoutBtn').style.display = 'none';
                 document.getElementById('appContainer').style.display = 'none';
@@ -352,485 +253,327 @@
             }
         });
 
-        // --- 5. LOGIC DỮ LIỆU & RENDER FORM ---
+        // --- 4. LOGIC DỮ LIỆU ---
         async function loadCatalogs() {
             const doc = await db.collection('configs').doc('master_data').get();
             if(doc.exists) globalCatalogs = doc.data();
         }
 
         async function loadAdminUserList() {
-            const sel = document.getElementById('adminUserSelect');
-            // Giữ lại option đầu tiên
-            sel.innerHTML = '<option value="">-- Chọn tên --</option>';
-            
-            const snap = await db.collection('users').where('role', 'in', ['user', 'admin']).get();
-            let options = [];
-            snap.forEach(doc => {
-                if(doc.id !== currentUser.uid) { // Không hiện chính Admin
-                    options.push(`<option value="${doc.id}">${doc.data().fullname || doc.data().email}</option>`);
-                }
-            });
-            sel.innerHTML += options.join('');
+            const sel = document.getElementById('adminUserSelect'); sel.innerHTML = '<option value="">-- Chọn tên --</option>';
+            const snap = await db.collection('users').get();
+            snap.forEach(doc => { if(doc.id !== currentUser.uid) sel.innerHTML += `<option value="${doc.id}">${doc.data().fullname || doc.data().email}</option>`; });
         }
 
         async function onAdminSelectUser() {
-            const sel = document.getElementById('adminUserSelect');
-            const selectedId = sel.value;
-            
-            if(!selectedId) {
-                // Quay về chỉnh sửa chính mình nếu bỏ chọn
-                editingUserId = currentUser.uid;
-            } else {
-                editingUserId = selectedId;
-            }
+            editingUserId = document.getElementById('adminUserSelect').value || currentUser.uid;
             await loadData();
         }
 
-        async function createUserRowIfNotExist() {
-            // Nếu đang là Admin sửa của người khác, phải dùng editingUserId
-            const targetId = editingUserId || myUserId;
-            if(!targetId) return;
-
-            const weekRef = db.collection('weeks').doc(`week_${currentYear}_${currentWeek}`);
-            const weekDoc = await weekRef.get();
-            if (!weekDoc.exists) await weekRef.set({ createdAt: firebase.firestore.FieldValue.serverTimestamp() });
-
-            const userRowsRef = weekRef.collection('rows').doc(targetId);
-            if (!(await userRowsRef.get()).exists) {
-                // Lấy tên từ user collection để lưu vào row
-                const userDoc = await db.collection('users').doc(targetId).get();
-                const userData = userDoc.data();
-                await userRowsRef.set({ 
-                    email: userData.email, 
-                    fullname: userData.fullname 
-                });
+        // Lấy dữ liệu để đổ vào Dropdown
+        async function loadFilterData() {
+            const yearSnap = await db.collection('configs').doc('master_data').collection('academic_years').get();
+            const yearSel = document.getElementById('filterYear'); yearSel.innerHTML = '<option value="">Chọn niên khóa...</option>';
+            availableYears = [];
+            yearSnap.forEach(doc => { yearSel.innerHTML += `<option value="${doc.id}">${doc.id}</option>`; availableYears.push(doc.id); });
+            
+            if(availableYears.length > 0) {
+                yearSel.value = availableYears[0]; // Mặc định chọn niên khóa đầu tiên
+                await loadWeekDropdown(availableYears[0]);
+                await loadData();
             }
         }
 
+        async function loadWeekDropdown(year) {
+            const weekSel = document.getElementById('filterWeek'); weekSel.innerHTML = '<option value="">Chọn tuần...</option><option value="all">Tất cả tuần</option>';
+            if(!year) return;
+            const weekSnap = await db.collection('configs').doc('master_data').collection('academic_years').doc(year).collection('weeks').get();
+            weekSnap.forEach(doc => { 
+                const weekNum = parseInt(doc.id.replace('week_', ''));
+                weekSel.innerHTML += `<option value="${doc.id}">Tuần ${weekNum}</option>`;
+            });
+        }
+
+        document.getElementById('filterYear').addEventListener('change', async function() {
+            await loadWeekDropdown(this.value);
+            await loadData();
+        });
+
+        // --- 5. TẢI VÀ RENDER BẢNG TỔNG HỢP ---
         async function loadData() {
+            const year = document.getElementById('filterYear').value;
+            const week = document.getElementById('filterWeek').value;
+            const lecturer = document.getElementById('filterLecturer').value;
+            const dayFilter = document.getElementById('filterDay').value;
+
+            if(!year || !week) { document.getElementById('scheduleTableContainer').innerHTML = '<p style="text-align:center; padding:40px;">Vui lòng chọn Niên khóa và Tuần.</p>'; return; }
+
             document.getElementById('scheduleTableContainer').innerHTML = '<p style="text-align:center;">Đang tải...</p>';
-            try {
-                const usersSnap = await db.collection('users').where('role', 'in', ['user', 'admin', 'super_admin']).get();
-                let users = []; usersSnap.forEach(doc => users.push({ id: doc.id, ...doc.data() }));
 
-                const rowsSnap = await db.collection('weeks').doc(`week_${currentYear}_${currentWeek}`).collection('rows').get();
-                let scheduleMap = {}; rowsSnap.forEach(doc => { scheduleMap[doc.id] = doc.data(); });
+            // Lấy danh sách User
+            const usersSnap = await db.collection('users').get();
+            let users = []; usersSnap.forEach(doc => users.push({ id: doc.id, ...doc.data() }));
 
-                renderTable(users, scheduleMap);
-                
-                // Đảm bảo user mục tiêu đã tồn tại trong DB
-                await createUserRowIfNotExist();
-                renderMyForm(scheduleMap);
-                
-                // Kích hoạt kéo thả cột sau khi bảng render xong
-                setTimeout(initResizable, 100);
-            } catch(e) { document.getElementById('scheduleTableContainer').innerHTML = `<p style="color:red;">Lỗi: ${e.message}</p>`; }
-        }
-
-        // Hàm tính ngày tháng dựa trên số tuần
-        function getDateForDayOfWeek(weekNum, dayOffset) {
-            const date = new Date(currentYear, 0, 1 + (weekNum - 1) * 7);
-            const dayOfWeek = date.getDay(); 
-            const diff = (dayOffset - dayOfWeek + 7) % 7;
-            date.setDate(date.getDate() + diff);
-            return date;
-        }
-
-        // --- 6. RENDER FORM ---
-        function renderMyForm(scheduleMap) {
-            const section = document.getElementById('myInputSection');
-            section.style.display = 'block'; 
-            const formContainer = document.getElementById('myScheduleForm');
-            
-            // Lấy dữ liệu của đúng người đang được edit
-            const targetData = scheduleMap[editingUserId] || {};
-            
-            let html = '';
-            DAYS.forEach((dayKey, index) => {
-                const displayDay = DISPLAY_NAMES[index];
-                const dayDataFromDB = targetData[dayKey] || [];
-                
-                html += `<div class="day-schedule-block" id="block_${dayKey}">
-                    <div class="day-header">
-                        <h5>${displayDay}</h5>
-                        <div class="day-controls">
-                            <button class="btn-sm btn-primary" onclick="addPeriodRow('${dayKey}')">+ Thêm cặp</button>
-                            <button class="btn-sm btn-success" onclick="saveDay('${dayKey}')">💾 Lưu ngày</button>
-                            <button class="btn-sm btn-danger" onclick="clearDay('${dayKey}')">🗑️ Xóa ngày</button>
-                        </div>
-                    </div>
-                    <div class="period-rows-container" id="container_${dayKey}"></div>
-                    <div class="day-total-display">
-                        <span id="total_display_${dayKey}" class="day-total-display-text">Tổng: 0 Tiết</span>
-                    </div>
-                </div>`;
-            });
-            formContainer.innerHTML = html;
-
-            // Điền dữ liệu từ DB vào form (nếu có)
-            DAYS.forEach((dayKey) => {
-                const dayDataFromDB = targetData[dayKey] || [];
-                if(dayDataFromDB && dayDataFromDB.length > 0) {
-                    renderDayRows(dayKey, dayDataFromDB);
+            // Lấy dữ liệu lịch dạy
+            let allRows = [];
+            if(week === 'all') {
+                // Nếu chọn tất cả tuần, lấy tất cả sub-collection weeks
+                const weeksSnap = await db.collection('configs').doc('master_data').collection('academic_years').doc(year).collection('weeks').listDocuments();
+                for (const weekRef of weeksSnap) {
+                    const rowsSnap = await weekRef.collection('rows').get();
+                    rowsSnap.forEach(doc => allRows.push({ weekId: weekRef.id, ...doc.data(), id: doc.id }));
                 }
-            });
-        }
-
-        function renderDayRows(dayKey, data) {
-            const container = document.getElementById(`container_${dayKey}`);
-            if(!container) return;
-            
-            if(!data || data.length === 0) {
-                container.innerHTML = '';
-                updateDayTotal(dayKey);
-                return;
-            }
-
-            let html = '';
-            data.forEach((entry, idx) => {
-                const periodVal = entry.period || 'I';
-                const periodOpts = ['I', 'II', 'III', 'IV', 'V'].map(p => `<option value="${p}" ${p === periodVal ? 'selected' : ''}>${p}</option>`).join('');
-                
-                html += `<div class="period-row-block">
-                    <button class="remove-row-btn" onclick="removePeriodRow('${dayKey}', this)">×</button>
-                    <div class="field-group">
-                        <label>Cặp tiết</label>
-                        <select class="period-select">${periodOpts}</select>
-                    </div>
-                    <div class="field-group">
-                        <label>Môn học</label>
-                        <select class="subject-select" onchange="toggleCustomInput(this)">
-                            <option value="">Chọn môn...</option>
-                            ${globalCatalogs.subjects.map(s => `<option value="${s}" ${s === entry.subject ? 'selected' : ''}>${s}</option>`).join('')}
-                            <option value="__CUSTOM__" ${entry.subject && !globalCatalogs.subjects.includes(entry.subject) ? 'selected' : ''}>✏️ Nhập tên khác</option>
-                        </select>
-                        <input type="text" class="d-none custom-input mt-1" placeholder="Tên môn khác..." value="${entry.subject && !globalCatalogs.subjects.includes(entry.subject) ? entry.subject : ''}">
-                    </div>
-                    <div class="field-group">
-                        <label>Lớp</label>
-                        <select class="class-select" onchange="toggleCustomInput(this)">
-                            <option value="">Chọn lớp...</option>
-                            ${globalCatalogs.classes.map(c => `<option value="${c}" ${c === entry.class ? 'selected' : ''}>${c}</option>`).join('')}
-                            <option value="__CUSTOM__" ${entry.class && !globalCatalogs.classes.includes(entry.class) ? 'selected' : ''}>✏️ Nhập tên khác</option>
-                        </select>
-                        <input type="text" class="d-none custom-input mt-1" placeholder="Tên lớp khác..." value="${entry.class && !globalCatalogs.classes.includes(entry.class) ? entry.class : ''}">
-                    </div>
-                    <div class="field-group">
-                        <label>Phòng</label>
-                        <select class="room-select" onchange="toggleCustomInput(this)">
-                            <option value="">Chọn phòng...</option>
-                            ${globalCatalogs.rooms.map(r => `<option value="${r}" ${r === entry.room ? 'selected' : ''}>${r}</option>`).join('')}
-                            <option value="__CUSTOM__" ${entry.room && !globalCatalogs.rooms.includes(entry.room) ? 'selected' : ''}>✏️ Nhập tên khác</option>
-                        </select>
-                        <input type="text" class="d-none custom-input mt-1" placeholder="Tên phòng khác..." value="${entry.room && !globalCatalogs.rooms.includes(entry.room) ? entry.room : ''}">
-                    </div>
-                    <div class="field-group">
-                        <label>Số tiết</label>
-                        <input type="number" class="slots-input" value="${entry.slots || SLOTS_PER_PERIOD}" min="0">
-                    </div>
-                    <div class="field-group">
-                        <label>Ghi chú</label>
-                        <input type="text" class="note-input" placeholder="VD: Thi kết thúc (Thụ+Giang)" value="${entry.note || ''}">
-                    </div>
-                </div>`;
-            });
-            container.innerHTML = html;
-            updateDayTotal(dayKey);
-        }
-
-        function updateDayTotal(dayKey) {
-            const container = document.getElementById(`container_${dayKey}`);
-            if(!container) return;
-            const blocks = container.querySelectorAll('.period-row-block');
-            let total = 0;
-            blocks.forEach(block => {
-                let s = parseInt(block.querySelector('.slots-input').value) || 0;
-                total += s;
-            });
-            const display = document.getElementById(`total_display_${dayKey}`);
-            if(display) display.innerHTML = `Tổng: ${total} Tiết`;
-        }
-
-        // --- 7. TƯƠNG TÁC FORM ---
-        function addPeriodRow(dayKey) {
-            const container = document.getElementById(`container_${dayKey}`);
-            const periodOpts = ['I', 'II', 'III', 'IV', 'V'].map(p => `<option value="${p}">${p}</option>`).join('');
-            const newBlock = document.createElement('div');
-            newBlock.className = 'period-row-block';
-            newBlock.innerHTML = `
-                <button class="remove-row-btn" onclick="removePeriodRow('${dayKey}', this)">×</button>
-                <div class="field-group">
-                    <label>Cặp tiết</label>
-                    <select class="period-select">${periodOpts}</select>
-                </div>
-                <div class="field-group">
-                    <label>Môn học</label>
-                    <select class="subject-select" onchange="toggleCustomInput(this)">
-                        <option value="">Chọn môn...</option>${globalCatalogs.subjects.map(s => `<option value="${s}">${s}</option>`).join('')}
-                        <option value="__CUSTOM__">✏️ Nhập tên khác</option>
-                    </select>
-                    <input type="text" class="d-none custom-input mt-1" placeholder="Tên môn khác...">
-                </div>
-                <div class="field-group">
-                    <label>Lớp</label>
-                    <select class="class-select" onchange="toggleCustomInput(this)">
-                        <option value="">Chọn lớp...</option>${globalCatalogs.classes.map(c => `<option value="${c}">${c}</option>`).join('')}
-                        <option value="__CUSTOM__">✏️ Nhập tên khác</option>
-                    </select>
-                    <input type="text" class="d-none custom-input mt-1" placeholder="Tên lớp khác...">
-                </div>
-                <div class="field-group">
-                    <label>Phòng</label>
-                    <select class="room-select" onchange="toggleCustomInput(this)">
-                        <option value="">Chọn phòng...</option>${globalCatalogs.rooms.map(r => `<option value="${r}">${r}</option>`).join('')}
-                        <option value="__CUSTOM__">✏️ Nhập tên khác</option>
-                    </select>
-                    <input type="text" class="d-none custom-input mt-1" placeholder="Tên phòng khác...">
-                </div>
-                <div class="field-group">
-                    <label>Số tiết</label>
-                    <input type="number" class="slots-input" value="${SLOTS_PER_PERIOD}" min="0">
-                </div>
-                <div class="field-group">
-                    <label>Ghi chú</label>
-                    <input type="text" class="note-input" placeholder="VD: Thi kết thúc (Thụ+Giang)">
-                </div>
-            `;
-            container.appendChild(newBlock);
-            updateDayTotal(dayKey);
-        }
-
-        function removePeriodRow(dayKey, btn) {
-            btn.closest('.period-row-block').remove();
-            updateDayTotal(dayKey);
-        }
-
-        function getSelectValue(row, selector) {
-            const sel = row.querySelector(selector);
-            if(sel.value === '__CUSTOM__') {
-                const customInput = row.querySelector(selector + ' + .custom-input');
-                return customInput ? customInput.value : '';
-            }
-            return sel.value;
-        }
-
-        function toggleCustomInput(selectEl) {
-            const customInput = selectEl.parentElement.querySelector('.custom-input');
-            if(selectEl.value === '__CUSTOM__') {
-                customInput.classList.remove('d-none');
-                selectEl.classList.add('d-none');
-                customInput.focus();
             } else {
-                customInput.classList.add('d-none');
-                selectEl.classList.remove('d-none');
+                const rowsSnap = await db.collection('configs').doc('master_data').collection('academic_years').doc(year).collection('weeks').doc(week).collection('rows').get();
+                rowsSnap.forEach(doc => allRows.push({ weekId: week, ...doc.data(), id: doc.id }));
             }
-        }
 
-        function saveDay(dayKey) {
-            const container = document.getElementById(`container_${dayKey}`);
-            const blocks = container.querySelectorAll('.period-row-block');
-            let dayArray = [];
-            blocks.forEach(block => {
-                let period = block.querySelector('.period-select').value;
-                let subject = getSelectValue(block, '.subject-select');
-                let className = getSelectValue(block, '.class-select');
-                let room = getSelectValue(block, '.room-select');
-                let slots = parseInt(block.querySelector('.slots-input').value) || 0;
-                let note = block.querySelector('.note-input').value.trim();
-                if(period && subject) {
-                    dayArray.push({ period, subject, class: className, room, slots, note });
-                }
-            });
-            updateUserDataDay(dayKey, dayArray);
-        }
-
-        function clearDay(dayKey) {
-            if(!confirm(`Bạn có chắc muốn xóa toàn bộ dữ liệu của ngày này?`)) return;
-            updateUserDataDay(dayKey, []);
-        }
-
-        async function updateUserDataDay(dayKey, dataArray) {
-            if(!currentUser) return;
-            // Admin cần ghi vào ID của người đang được chọn
-            const targetId = editingUserId || myUserId;
-            if(!targetId) return;
-
-            try {
-                const rowRef = db.collection('weeks').doc(`week_${currentYear}_${currentWeek}`).collection('rows').doc(targetId);
-                await rowRef.update({ [dayKey]: dataArray });
-                alert(`✅ Đã lưu ngày ${dayKey.replace('_', ' ')} thành công!`);
-                renderDayRows(dayKey, dataArray);
-                loadData();
-            } catch(e) {
-                alert("Lỗi lưu dữ liệu: " + e.message);
-            }
-        }
-
-        async function saveAllWeekData() {
-            if(!currentUser) return;
-            const targetId = editingUserId || myUserId;
-            if(!targetId) return;
-            
-            let allData = {};
-            DAYS.forEach(dayKey => {
-                const container = document.getElementById(`container_${dayKey}`);
-                if(!container) return;
-                const blocks = container.querySelectorAll('.period-row-block');
-                let dayArray = [];
-                blocks.forEach(block => {
-                    let period = block.querySelector('.period-select').value;
-                    let subject = getSelectValue(block, '.subject-select');
-                    let className = getSelectValue(block, '.class-select');
-                    let room = getSelectValue(block, '.room-select');
-                    let slots = parseInt(block.querySelector('.slots-input').value) || 0;
-                    let note = block.querySelector('.note-input').value.trim();
-                    if(period && subject) {
-                        dayArray.push({ period, subject, class: className, room, slots, note });
-                    }
-                });
-                allData[dayKey] = dayArray;
-            });
-            
-            try {
-                const rowRef = db.collection('weeks').doc(`week_${currentYear}_${currentWeek}`).collection('rows').doc(targetId);
-                await rowRef.update(allData);
-                alert("✅ Đã lưu lịch cả tuần thành công!");
-                loadData();
-            } catch(e) {
-                alert("Lỗi lưu cả tuần: " + e.message);
-            }
-        }
-
-        // --- 8. RENDER BẢNG TỔNG HỢP ---
-        function renderTable(users, scheduleMap) {
-            const container = document.getElementById('scheduleTableContainer');
-            const dateObjects = DAYS.map((_, index) => getDateForDayOfWeek(currentWeek, index + 1));
-
-            let html = `<table id="scheduleTable" style="width:100%;">
-                <thead>
-                    <tr>
-                        <th style="min-width:160px; text-align:center;">Giảng Viên</th>
-                        ${dateObjects.map((date, idx) => `
-                            <th class="day-header-cell" style="width: 150px;">
-                                <span class="day-name">${DISPLAY_NAMES[idx]}</span>
-                                <span class="day-date">${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}</span>
-                            </th>
-                        `).join('')}
-                        <th style="width:80px; text-align:center;">Tổng tiết</th>
-                    </tr>
-                </thead>
-                <tbody>`;
-            
-            let grandTotals = {};
-
-            users.forEach(user => {
-                const userData = scheduleMap[user.id] || {};
-                html += `<tr><td class="teacher-header" style="text-align:left;">${user.fullname || 'GV'}</td>`;
-                let lecturerTotal = 0;
+            // Nhóm dữ liệu theo tuần -> user -> ngày
+            let groupedData = {};
+            allRows.forEach(row => {
+                const weekId = row.weekId;
+                if(!groupedData[weekId]) groupedData[weekId] = {};
+                const userId = row.id;
+                if(!groupedData[weekId][userId]) groupedData[weekId][userId] = {};
                 
-                DAYS.forEach((day, idx) => {
-                    const dayArr = userData[day] || []; 
-                    let displayHtml = '';
+                DAY_KEYS.forEach(day => {
+                    if(row[day]) groupedData[weekId][userId][day] = row[day];
+                });
+            });
+
+            renderTable(groupedData, users, lecturer, dayFilter);
+            renderMyForm(groupedData, week);
+        }
+
+        function renderTable(dataMap, users, lecturerFilter, dayFilter) {
+            const container = document.getElementById('scheduleTableContainer');
+            // Xác định cột cần hiển thị
+            let displayDays = DAY_KEYS;
+            let displayDayNames = DISPLAY_DAYS;
+            if(dayFilter !== 'all') {
+                const idx = DAY_KEYS.indexOf(dayFilter);
+                if(idx !== -1) { displayDays = [DAY_KEYS[idx]]; displayDayNames = [DISPLAY_DAYS[idx]]; }
+            }
+
+            let html = `<table id="scheduleTable"><thead><tr><th style="width:150px; text-align:center; position:relative;">Giảng Viên</th>`;
+            displayDays.forEach((day, idx) => {
+                html += `<th class="day-header-cell" style="width:200px;">${displayDayNames[idx]}</th>`;
+            });
+            html += `<th style="width:80px; text-align:center;">Tổng tiết</th></tr></thead><tbody>`;
+
+            let grandTotals = {};
+            let filteredUsers = users.filter(u => lecturerFilter === 'all' || u.id === lecturerFilter);
+            if(filteredUsers.length === 0) filteredUsers = users;
+
+            filteredUsers.forEach(user => {
+                html += `<tr><td class="teacher-header">${user.fullname || 'GV'}</td>`;
+                let lecturerTotal = 0;
+
+                displayDays.forEach(day => {
+                    // Tính tổng trên tất cả các tuần đang lọc
                     let dayTotal = 0;
+                    let displayHtml = '';
 
-                    if(Array.isArray(dayArr) && dayArr.length > 0) {
-                        dayArr.forEach(entry => {
-                            if(entry.period && entry.subject) {
-                                // Tạo tooltip thông minh
-                                let fullContent = `${entry.period}: ${entry.subject}`;
-                                if(entry.class) fullContent += ` / ${entry.class}`;
-                                if(entry.room) fullContent += ` / ${entry.room}`;
-                                fullContent += ` / ${parseInt(entry.slots) || 0}`;
-                                if(entry.note) fullContent += ` / ${entry.note}`;
-
-                                let lineHtml = `<div class="entry-detail-row" title="${fullContent}">`;
-                                lineHtml += `<span class="entry-period-badge">${entry.period}:</span>`;
-                                lineHtml += `<span class="entry-subject">${entry.subject}</span>`;
-                                if(entry.class || entry.room) {
-                                    lineHtml += `<span class="entry-meta"> / ${entry.class || '-'} / ${entry.room || '-'}`;
-                                }
-                                lineHtml += ` / ${parseInt(entry.slots) || 0}`;
-                                if(entry.note) {
-                                    lineHtml += ` / <span class="entry-note">${entry.note}</span>`;
-                                }
-                                lineHtml += `</span></div>`;
-                                
-                                displayHtml += lineHtml;
-                                dayTotal += parseInt(entry.slots) || 0; 
+                    Object.keys(dataMap).forEach(weekId => {
+                        const userData = dataMap[weekId][user.id];
+                        if(userData && userData[day]) {
+                            const dayArr = userData[day];
+                            if(Array.isArray(dayArr) && dayArr.length > 0) {
+                                dayArr.forEach(entry => {
+                                    if(entry.period && entry.subject) {
+                                        let fullContent = `${entry.period}: ${entry.subject} / ${entry.class || '-'} / ${entry.room || '-'} / ${parseInt(entry.slots) || 0}`;
+                                        if(entry.note) fullContent += ` / ${entry.note}`;
+                                        displayHtml += `<div class="entry-detail-row" title="${fullContent}"><span class="entry-period-badge">${entry.period}:</span><span class="entry-subject">${entry.subject}</span><span class="entry-meta"> / ${entry.class || '-'} / ${entry.room || '-'} / ${parseInt(entry.slots) || 0}</span>${entry.note ? `<span class="entry-note"> / ${entry.note}</span>` : ''}</div>`;
+                                        dayTotal += parseInt(entry.slots) || 0;
+                                    }
+                                });
                             }
-                        });
-                    }
-                    if(!displayHtml) displayHtml = '<div style="color:#ccc; text-align:center; margin: 5px 0;">-</div>';
+                        }
+                    });
+
+                    if(!displayHtml) displayHtml = '<div style="color:#ccc;text-align:center;padding:10px 0;">-</div>';
                     lecturerTotal += dayTotal;
                     if(!grandTotals[day]) grandTotals[day] = 0;
                     grandTotals[day] += dayTotal;
-                    html += `<td>${displayHtml}<div style="margin-top:8px;border-top:1px dashed #eee;padding-top:5px;text-align:right;">
-                        <span class="day-total-display-text">Tổng: ${dayTotal} Tiết</span>
-                    </div></td>`;
+                    html += `<td>${displayHtml}<div style="margin-top:8px;border-top:1px dashed #eee;padding-top:5px;text-align:right;"><span class="day-total-display-text">Tổng: ${dayTotal}</span></div></td>`;
                 });
                 html += `<td class="total-cell">${lecturerTotal}</td></tr>`;
             });
 
             html += `<tr class="grand-total-row"><td>TỔNG CỘNG</td>`;
             let finalTotal = 0;
-            DAYS.forEach(day => { const t = grandTotals[day] || 0; finalTotal += t; html += `<td>${t}</td>`; });
+            displayDays.forEach(day => { const t = grandTotals[day] || 0; finalTotal += t; html += `<td>${t}</td>`; });
             html += `<td>${finalTotal}</td></tr></tbody></table>`;
             container.innerHTML = html;
         }
 
-        // --- 9. KÉO THẢ CỘT (RESIZABLE COLUMN) ---
-        function initResizable() {
-            // Nếu đã có thư viện colResizable thì gọi
-            if(typeof $ !== 'undefined' && $.colResizable) {
-                // Tuy nhiên, cách an toàn nhất với Vanilla JS là dùng thư viện của họ.
-                // Ở đây chúng ta dùng biến toàn cục đã include.
-                try {
-                    // Lưu kích thước cột vào localStorage
-                    const savedWidths = localStorage.getItem('schedule_table_col_widths');
-                    
-                    $('table').colResizable({
-                        liveDrag: true,
-                        gripInnerHtml: '<div class="resize-handle"></div>',
-                        draggingClass: 'active',
-                        onResize: function(e) {
-                            // Lưu kích thước sau khi kéo thả
-                            const widths = [];
-                            e.currentTarget.querySelectorAll('th').forEach(th => {
-                                widths.push(th.offsetWidth);
-                            });
-                            localStorage.setItem('schedule_table_col_widths', JSON.stringify(widths));
-                        },
-                        // Khôi phục kích thước đã lưu nếu có
-                        ...(savedWidths ? { 
-                            width: JSON.parse(savedWidths).map(w => w + 'px').join(',') 
-                        } : {})
-                    });
-                } catch (err) {
-                    console.warn("Không thể init colResizable:", err);
-                }
-            } else {
-                console.warn("Thư viện colResizable chưa tải xong hoặc không tương thích.");
-            }
+        // --- 6. RENDER FORM NHẬP LIỆU ---
+        async function renderMyForm(dataMap, currentWeekId) {
+            const section = document.getElementById('myInputSection');
+            section.style.display = 'block';
+            const formContainer = document.getElementById('myScheduleForm');
+            
+            const targetData = dataMap[currentWeekId] && dataMap[currentWeekId][editingUserId] ? dataMap[currentWeekId][editingUserId] : {};
+            
+            let html = '';
+            DAY_KEYS.forEach((day, index) => {
+                const dayData = targetData[day] || [];
+                html += `<div class="day-schedule-block" id="block_${day}">
+                    <div class="day-header"><h5>${DISPLAY_DAYS[index]}</h5>
+                        <div class="day-controls">
+                            <button class="btn-sm btn-primary" onclick="addPeriodRow('${day}')">+ Thêm cặp</button>
+                            <button class="btn-sm btn-success" onclick="saveDay('${day}')">💾 Lưu ngày</button>
+                            <button class="btn-sm btn-danger" onclick="clearDay('${day}')">🗑️ Xóa ngày</button>
+                        </div>
+                    </div>
+                    <div class="period-rows-container" id="container_${day}"></div>
+                    <div class="day-total-display"><span id="total_display_${day}" class="day-total-display-text">Tổng: 0</span></div>
+                </div>`;
+            });
+            formContainer.innerHTML = html;
+
+            DAY_KEYS.forEach(day => {
+                const dayData = targetData[day] || [];
+                if(dayData.length > 0) renderDayRows(day, dayData);
+            });
         }
 
-        // --- 10. CHỨC NĂNG ĐỔI TÊN ---
+        function renderDayRows(dayKey, data) {
+            const container = document.getElementById(`container_${dayKey}`);
+            if(!container) return;
+            if(!data || data.length === 0) { container.innerHTML = ''; updateDayTotal(dayKey); return; }
+
+            let html = '';
+            data.forEach(entry => {
+                const periodVal = entry.period || 'I';
+                const periodOpts = ['I','II','III','IV','V'].map(p => `<option value="${p}" ${p===periodVal?'selected':''}>${p}</option>`).join('');
+                html += `<div class="period-row-block">
+                    <button class="remove-row-btn" onclick="removePeriodRow('${dayKey}', this)">×</button>
+                    <div class="field-group"><label>Cặp tiết</label><select class="period-select">${periodOpts}</select></div>
+                    <div class="field-group"><label>Môn</label><select class="subject-select" onchange="toggleCustomInput(this)"><option value="">Chọn...</option>${globalCatalogs.subjects.map(s => `<option value="${s}" ${s===entry.subject?'selected':''}>${s}</option>`).join('')}<option value="__CUSTOM__" ${entry.subject && !globalCatalogs.subjects.includes(entry.subject)?'selected':''}>✏️ Nhập khác</option></select><input type="text" class="d-none custom-input" value="${entry.subject && !globalCatalogs.subjects.includes(entry.subject)?entry.subject:''}"></div>
+                    <div class="field-group"><label>Lớp</label><select class="class-select" onchange="toggleCustomInput(this)"><option value="">Chọn...</option>${globalCatalogs.classes.map(c => `<option value="${c}" ${c===entry.class?'selected':''}>${c}</option>`).join('')}<option value="__CUSTOM__" ${entry.class && !globalCatalogs.classes.includes(entry.class)?'selected':''}>✏️ Nhập khác</option></select><input type="text" class="d-none custom-input" value="${entry.class && !globalCatalogs.classes.includes(entry.class)?entry.class:''}"></div>
+                    <div class="field-group"><label>Phòng</label><select class="room-select" onchange="toggleCustomInput(this)"><option value="">Chọn...</option>${globalCatalogs.rooms.map(r => `<option value="${r}" ${r===entry.room?'selected':''}>${r}</option>`).join('')}<option value="__CUSTOM__" ${entry.room && !globalCatalogs.rooms.includes(entry.room)?'selected':''}>✏️ Nhập khác</option></select><input type="text" class="d-none custom-input" value="${entry.room && !globalCatalogs.rooms.includes(entry.room)?entry.room:''}"></div>
+                    <div class="field-group"><label>Số tiết</label><input type="number" class="slots-input" value="${entry.slots||SLOTS_PER_PERIOD}" min="0"></div>
+                    <div class="field-group"><label>Ghi chú</label><input type="text" class="note-input" value="${entry.note||''}"></div>
+                </div>`;
+            });
+            container.innerHTML = html;
+            updateDayTotal(dayKey);
+        }
+
+        // --- 7. CÁC HÀM HỖ TRỢ FORM ---
+        function updateDayTotal(dayKey) {
+            const container = document.getElementById(`container_${dayKey}`);
+            if(!container) return;
+            let total = 0;
+            container.querySelectorAll('.period-row-block').forEach(block => total += parseInt(block.querySelector('.slots-input').value) || 0);
+            const display = document.getElementById(`total_display_${dayKey}`);
+            if(display) display.innerHTML = `Tổng: ${total}`;
+        }
+
+        function addPeriodRow(dayKey) {
+            const container = document.getElementById(`container_${dayKey}`);
+            const newBlock = document.createElement('div'); newBlock.className = 'period-row-block';
+            newBlock.innerHTML = `
+                <button class="remove-row-btn" onclick="removePeriodRow('${dayKey}', this)">×</button>
+                <div class="field-group"><label>Cặp tiết</label><select class="period-select">${['I','II','III','IV','V'].map(p=>`<option value="${p}">${p}</option>`).join('')}</select></div>
+                <div class="field-group"><label>Môn</label><select class="subject-select" onchange="toggleCustomInput(this)"><option value="">Chọn...</option>${globalCatalogs.subjects.map(s=>`<option value="${s}">${s}</option>`).join('')}<option value="__CUSTOM__">✏️ Nhập khác</option></select><input type="text" class="d-none custom-input"></div>
+                <div class="field-group"><label>Lớp</label><select class="class-select" onchange="toggleCustomInput(this)"><option value="">Chọn...</option>${globalCatalogs.classes.map(c=>`<option value="${c}">${c}</option>`).join('')}<option value="__CUSTOM__">✏️ Nhập khác</option></select><input type="text" class="d-none custom-input"></div>
+                <div class="field-group"><label>Phòng</label><select class="room-select" onchange="toggleCustomInput(this)"><option value="">Chọn...</option>${globalCatalogs.rooms.map(r=>`<option value="${r}">${r}</option>`).join('')}<option value="__CUSTOM__">✏️ Nhập khác</option></select><input type="text" class="d-none custom-input"></div>
+                <div class="field-group"><label>Số tiết</label><input type="number" class="slots-input" value="${SLOTS_PER_PERIOD}" min="0"></div>
+                <div class="field-group"><label>Ghi chú</label><input type="text" class="note-input"></div>
+            `;
+            container.appendChild(newBlock); updateDayTotal(dayKey);
+        }
+
+        function removePeriodRow(dayKey, btn) { btn.closest('.period-row-block').remove(); updateDayTotal(dayKey); }
+        function getSelectValue(row, selector) {
+            const sel = row.querySelector(selector);
+            if(sel.value === '__CUSTOM__') return row.querySelector(selector + ' + .custom-input').value;
+            return sel.value;
+        }
+        function toggleCustomInput(sel) { const inp = sel.parentElement.querySelector('.custom-input'); if(sel.value === '__CUSTOM__') { inp.classList.remove('d-none'); sel.classList.add('d-none'); } else { inp.classList.add('d-none'); sel.classList.remove('d-none'); } }
+
+        // --- 8. LƯU DỮ LIỆU ---
+        async function saveDay(dayKey) {
+            if(!currentUser) return;
+            const container = document.getElementById(`container_${dayKey}`);
+            let dayArray = [];
+            container.querySelectorAll('.period-row-block').forEach(block => {
+                let period = block.querySelector('.period-select').value;
+                let subject = getSelectValue(block, '.subject-select');
+                let className = getSelectValue(block, '.class-select');
+                let room = getSelectValue(block, '.room-select');
+                let slots = parseInt(block.querySelector('.slots-input').value) || 0;
+                let note = block.querySelector('.note-input').value.trim();
+                if(period && subject) dayArray.push({ period, subject, class: className, room, slots, note });
+            });
+            await updateUserDataDay(dayKey, dayArray);
+        }
+
+        function clearDay(dayKey) {
+            if(confirm("Xóa toàn bộ dữ liệu ngày này?")) updateUserDataDay(dayKey, []);
+        }
+
+        async function updateUserDataDay(dayKey, dataArray) {
+            if(!currentUser) return;
+            const targetId = editingUserId || myUserId;
+            if(!targetId) return;
+            const year = document.getElementById('filterYear').value;
+            const week = document.getElementById('filterWeek').value;
+            if(!year || !week || week === 'all') return alert("Vui lòng chọn 1 tuần cụ thể để lưu!");
+
+            try {
+                const rowRef = db.collection('configs').doc('master_data').collection('academic_years').doc(year).collection('weeks').doc(week).collection('rows').doc(targetId);
+                await rowRef.update({ [dayKey]: dataArray });
+                alert("✅ Đã lưu!"); renderDayRows(dayKey, dataArray); await loadData();
+            } catch(e) { alert("Lỗi: " + e.message); }
+        }
+
+        async function saveAllWeekData() {
+            if(!currentUser) return;
+            const year = document.getElementById('filterYear').value;
+            const week = document.getElementById('filterWeek').value;
+            if(!year || !week || week === 'all') return alert("Vui lòng chọn 1 tuần cụ thể để lưu!");
+            const targetId = editingUserId || myUserId; if(!targetId) return;
+            let allData = {};
+            DAY_KEYS.forEach(dayKey => {
+                const container = document.getElementById(`container_${dayKey}`);
+                if(!container) return;
+                let dayArray = [];
+                container.querySelectorAll('.period-row-block').forEach(block => {
+                    let period = block.querySelector('.period-select').value;
+                    let subject = getSelectValue(block, '.subject-select');
+                    let className = getSelectValue(block, '.class-select');
+                    let room = getSelectValue(block, '.room-select');
+                    let slots = parseInt(block.querySelector('.slots-input').value) || 0;
+                    let note = block.querySelector('.note-input').value.trim();
+                    if(period && subject) dayArray.push({ period, subject, class: className, room, slots, note });
+                });
+                allData[dayKey] = dayArray;
+            });
+            try {
+                const rowRef = db.collection('configs').doc('master_data').collection('academic_years').doc(year).collection('weeks').doc(week).collection('rows').doc(targetId);
+                await rowRef.update(allData);
+                alert("✅ Đã lưu cả tuần!"); await loadData();
+            } catch(e) { alert("Lỗi: " + e.message); }
+        }
+
+        // --- 9. ĐỔI TÊN ---
         function openChangeNameModal() {
             document.getElementById('newDisplayName').value = currentUser.displayName || '';
-            document.getElementById('changeNameModal').style.display = 'flex';
+            document.getElementById('changeNameModal').style.display = 'block';
         }
-
         async function updateMyName() {
             const newName = document.getElementById('newDisplayName').value.trim();
             if(!newName) return alert("Vui lòng nhập tên mới!");
             try {
                 await currentUser.updateProfile({ displayName: newName });
                 await db.collection('users').doc(myUserId).update({ fullname: newName });
-                const rowRef = db.collection('weeks').doc(`week_${currentYear}_${currentWeek}`).collection('rows').doc(myUserId);
-                await rowRef.update({ fullname: newName });
+                // Cập nhật tên trong tất cả các tuần đã lưu (nếu cần logic phức tạp hơn, có thể dùng batch)
                 document.getElementById('changeNameModal').style.display = 'none';
-                alert("✅ Đã đổi tên thành công!");
-                location.reload();
-            } catch(e) { alert("Lỗi khi đổi tên: " + e.message); }
+                alert("✅ Đã đổi tên!"); location.reload();
+            } catch(e) { alert("Lỗi: " + e.message); }
         }
     </script>
 </body>
