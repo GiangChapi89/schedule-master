@@ -11,7 +11,7 @@
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
         .container { max-width: 1400px; margin: auto; background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
         
-        /* Navbar */
+        /* Navbar & Đổi tên */
         .navbar { background: linear-gradient(135deg, #2c3e50, #3498db); color: white; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; border-radius: 10px; margin-bottom: 25px; flex-wrap: wrap; gap: 15px; }
         .navbar h2 { margin: 0; font-size: 1.4rem; display: flex; align-items: center; gap: 10px; }
         .nav-right { display: flex; align-items: center; gap: 15px; }
@@ -67,9 +67,7 @@
         
         .teacher-header { background: #34495e; color: white; font-weight: bold; text-align: center; min-width: 140px; position: sticky; left: 0; z-index: 20; border-right: 2px solid #ddd; }
         .day-header-cell { padding: 6px 10px; text-align: center; min-width: 120px; background: #2c3e50; color: white; }
-        .day-header-cell .day-name { font-size: 14px; font-weight: 700; display: block; margin-bottom: 2px; }
-        .day-header-cell .day-date { font-size: 12px; font-weight: 400; color: #b0c4de; display: block; }
-
+        
         .entry-detail-row { padding: 4px 0; border-bottom: 1px solid #eee; font-size: 13px; display: flex; flex-wrap: wrap; gap: 3px; line-height: 1.4; }
         .entry-detail-row:last-child { border-bottom: none; }
         .entry-period-badge { font-weight: bold; color: #e67e22; margin-right: 5px; }
@@ -94,33 +92,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    
-    <!-- Thêm cấu hình Firebase trực tiếp trong HTML để chắc chắn auth tồn tại -->
-    <script>
-        // =============================================
-        // 🔥 FIREBASE CONFIG (Khắc phục lỗi undefined)
-        // =============================================
-        const firebaseConfig = {
-            apiKey: "AIzaSyDEjnVYAOpBHUV8AKfxxFdCumwGqiH_9C8",
-            authDomain: "schedule-master-3fead.firebaseapp.com",
-            projectId: "schedule-master-3fead",
-            storageBucket: "schedule-master-3fead.firebasestorage.app",
-            messagingSenderId: "56251862481",
-            appId: "1:56251862481:web:38fa80577b41a5248fe4f0",
-            measurementId: "G-76WQ3E4G7V"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
-
-        // Mặc định lấy tuần hiện tại (Tuần 1 của năm hiện tại)
-        function getCurrentWeek() {
-            const now = new Date();
-            const startOfYear = new Date(now.getFullYear(), 0, 1);
-            const days = Math.floor((now - startOfYear) / (24 * 60 * 60 * 1000));
-            return Math.ceil((days + startOfYear.getDay() + 1) / 7);
-        }
-    </script>
 </head>
 <body>
     <div class="container">
@@ -129,7 +100,6 @@
             <div class="nav-right" id="navRight">
                 <span id="userDisplay" style="font-weight: 500; display:flex; align-items:center; gap:8px;">
                     👤 Chưa đăng nhập
-                    <!-- Nút đổi tên (Ẩn khi chưa đăng nhập) -->
                     <button id="changeNameBtn" onclick="openChangeNameModal()" style="display:none; background:rgba(255,255,255,0.2); border:none; color:white; padding:4px 10px; border-radius:4px; font-size:12px; cursor:pointer;">✏️</button>
                 </span>
                 <button class="nav-btn" id="loginToggleBtn" onclick="toggleAuthModal()">🔑 Đăng nhập</button>
@@ -162,8 +132,14 @@
             <div class="filter-wrapper">
                 <div class="filter-group">
                     <label>📚 Niên khóa</label>
-                    <select id="filterYear" onchange="loadData()">
+                    <select id="filterYear" onchange="loadSemesters()">
                         <option value="">Chọn niên khóa...</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>📖 Học kỳ</label>
+                    <select id="filterSemester" onchange="loadData()">
+                        <option value="">Chọn học kỳ...</option>
                     </select>
                 </div>
                 <div class="filter-group">
@@ -194,7 +170,7 @@
             </div>
 
             <div id="scheduleTableContainer" class="table-wrapper">
-                <p style="text-align: center; color: #888; padding: 40px 0;">Vui lòng chọn Niên khóa và Tuần để tải dữ liệu.</p>
+                <p style="text-align: center; color: #888; padding: 40px 0;">Vui lòng chọn Niên khóa và Học kỳ để tải dữ liệu.</p>
             </div>
 
             <!-- ===== ADMIN USER SELECTOR ===== -->
@@ -203,7 +179,6 @@
                 <select id="adminUserSelect" onchange="onAdminSelectUser()">
                     <option value="">-- Chọn tên --</option>
                 </select>
-                <span style="font-size:13px; color:#666; margin-left:10px;">(Bạn đang ở chế độ Quản trị viên. Hãy chọn tên để thao tác thay họ.)</span>
             </div>
 
             <!-- ===== FORM NHẬP LIỆU ===== -->
@@ -215,6 +190,7 @@
                 <div id="myScheduleForm"></div>
             </div>
             
+            <!-- ===== MODAL ĐỔI TÊN ===== -->
             <div id="changeNameModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:999; justify-content:center; align-items:center;">
                 <div style="background:white; padding:30px; border-radius:12px; max-width:400px; width:90%; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
                     <h3 style="margin-top:0; color:#2c3e50;">✏️ Đổi tên hiển thị</h3>
@@ -229,16 +205,17 @@
         </div>
     </div>
 
+    <script src="schedule-config.js"></script>
     <script>
         // --- 1. BIẾN TOÀN CỤC ---
         let currentUser = null, currentUserRole = 'user', myUserId = null, editingUserId = null;
-        let globalCatalogs = { subjects: [], classes: [], rooms: [] };
+        let catalogs = { subjects: [], classes: [], rooms: [] }; // Cache danh mục
         let availableYears = [], availableWeeks = [];
         
         const SLOTS_PER_PERIOD = 2;
-        const DAY_MAP = { 'Mon': 'Thứ 2', 'Tue': 'Thứ 3', 'Wed': 'Thứ 4', 'Thu': 'Thứ 5', 'Fri': 'Thứ 6', 'Sat': 'Thứ 7' };
         const DAY_KEYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
         const DISPLAY_DAYS = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
+        const MONTH_NAMES = ["Tháng 1","Tháng 2","Tháng 3","Tháng 4","Tháng 5","Tháng 6","Tháng 7","Tháng 8","Tháng 9","Tháng 10","Tháng 11","Tháng 12"];
 
         // --- 2. CÁC HÀM GIAO DIỆN ---
         function toggleAuthModal() { 
@@ -316,18 +293,16 @@
 
         async function doLogout() { await auth.signOut(); location.reload(); }
 
-        // --- 4. AUTH STATE CHANGED ---      
+        // --- 4. AUTH STATE CHANGED (SỬA LỖI DÒNG 326 & 134) ---      
         auth.onAuthStateChanged(async (user) => {
             if (user) {
                 currentUser = user; myUserId = user.uid; editingUserId = user.uid;
                 document.getElementById('userDisplay').innerHTML = `👤 ${user.displayName || user.email}`;
                 
-                // ✅ SỬA LỖI DÒNG 226: Dùng setTimeout và Optional Chaining để chặn lỗi null
+                // ✅ BẢO MẬT TUYỆT ĐỐI: Kiểm tra kỹ trước khi gán style
                 setTimeout(() => {
-                    const changeNameBtn = document.getElementById('changeNameBtn');
-                    if (changeNameBtn) {
-                        changeNameBtn.style.display = 'inline-block';
-                    }
+                    const btn = document.getElementById('changeNameBtn');
+                    if (btn) btn.style.display = 'inline-block';
                 }, 100);
 
                 document.getElementById('loginToggleBtn').style.display = 'none';
@@ -347,7 +322,7 @@
                     document.getElementById('adminUserSelectorWrapper').style.display = 'block';
                     await loadAdminUserList();
                 }
-                await loadCatalogs(); await loadFilterData();
+                await loadFilterData();
             } else {
                 currentUser = null; currentUserRole = 'user';
                 document.getElementById('userDisplay').innerHTML = '👤 Chưa đăng nhập';
@@ -360,11 +335,6 @@
         });
 
         // --- 5. LOGIC DỮ LIỆU ---
-        async function loadCatalogs() {
-            const doc = await db.collection('configs').doc('master_data').get();
-            if(doc.exists) globalCatalogs = doc.data();
-        }
-
         async function loadAdminUserList() {
             const sel = document.getElementById('adminUserSelect'); sel.innerHTML = '<option value="">-- Chọn tên --</option>';
             const snap = await db.collection('users').get();
@@ -376,23 +346,43 @@
             await loadData();
         }
 
-        // Lấy dữ liệu để đổ vào Dropdown
+        // Lấy dữ liệu đổ vào Dropdown
         async function loadFilterData() {
             const yearSnap = await db.collection('configs').doc('master_data').collection('academic_years').get();
             const yearSel = document.getElementById('filterYear'); yearSel.innerHTML = '<option value="">Chọn niên khóa...</option>';
-            availableYears = [];
-            yearSnap.forEach(doc => { yearSel.innerHTML += `<option value="${doc.id}">${doc.id}</option>`; availableYears.push(doc.id); });
+            yearSnap.forEach(doc => { yearSel.innerHTML += `<option value="${doc.id}">${doc.id}</option>`; });
             
-            if(availableYears.length > 0) {
-                yearSel.value = availableYears[0]; // Mặc định chọn niên khóa đầu tiên
-                await loadWeekDropdown(availableYears[0]);
-                await loadData();
+            if(yearSel.options.length > 1) {
+                yearSel.value = yearSel.options[1].value;
+                await loadSemesters();
             }
         }
 
-        async function loadWeekDropdown(year) {
+        async function loadSemesters() {
+            const year = document.getElementById('filterYear').value;
+            const semSel = document.getElementById('filterSemester'); semSel.innerHTML = '<option value="">Chọn học kỳ...</option>';
             const weekSel = document.getElementById('filterWeek'); weekSel.innerHTML = '<option value="">Chọn tuần...</option><option value="all">Tất cả tuần</option>';
+            
             if(!year) return;
+            
+            const yearDoc = await db.collection('configs').doc('master_data').collection('academic_years').doc(year).get();
+            if(yearDoc.exists && yearDoc.data().semesters) {
+                yearDoc.data().semesters.forEach(sem => {
+                    semSel.innerHTML += `<option value="${sem}">${sem}</option>`;
+                });
+                if(semSel.options.length > 1) {
+                    semSel.value = semSel.options[1].value;
+                    await loadWeekDropdown(year, semSel.value);
+                    await loadData();
+                }
+            }
+        }
+
+        async function loadWeekDropdown(year, semester) {
+            const weekSel = document.getElementById('filterWeek');
+            // Giữ lại option 'all'
+            weekSel.innerHTML = '<option value="">Chọn tuần...</option><option value="all">Tất cả tuần</option>';
+            
             const weekSnap = await db.collection('configs').doc('master_data').collection('academic_years').doc(year).collection('weeks').get();
             weekSnap.forEach(doc => { 
                 const weekNum = parseInt(doc.id.replace('week_', ''));
@@ -400,27 +390,42 @@
             });
         }
 
-        document.getElementById('filterYear').addEventListener('change', async function() {
-            await loadWeekDropdown(this.value);
+        document.getElementById('filterYear').addEventListener('change', async function() { await loadSemesters(); });
+        document.getElementById('filterSemester').addEventListener('change', async function() {
+            await loadWeekDropdown(document.getElementById('filterYear').value, this.value);
             await loadData();
         });
+
+        // Lấy danh mục theo Học kỳ để dùng trong Form
+        async function getCatalogsForSemester(year, semester) {
+            const ref = db.collection('configs').doc('master_data').collection('academic_years').doc(year).collection('semesters').doc(semester);
+            const doc = await ref.get();
+            if(doc.exists) {
+                catalogs = { subjects: doc.data().subjects || [], classes: doc.data().classes || [], rooms: doc.data().rooms || [] };
+            } else {
+                catalogs = { subjects: [], classes: [], rooms: [] };
+            }
+        }
 
         // --- 6. TẢI VÀ RENDER BẢNG TỔNG HỢP ---
         async function loadData() {
             const year = document.getElementById('filterYear').value;
+            const semester = document.getElementById('filterSemester').value;
             const week = document.getElementById('filterWeek').value;
             const lecturer = document.getElementById('filterLecturer').value;
             const dayFilter = document.getElementById('filterDay').value;
 
-            if(!year || !week) { document.getElementById('scheduleTableContainer').innerHTML = '<p style="text-align:center; padding:40px;">Vui lòng chọn Niên khóa và Tuần.</p>'; return; }
+            if(!year || !semester || !week) { 
+                document.getElementById('scheduleTableContainer').innerHTML = '<p style="text-align:center; padding:40px;">Vui lòng chọn Niên khóa, Học kỳ và Tuần.</p>'; 
+                return; 
+            }
 
             document.getElementById('scheduleTableContainer').innerHTML = '<p style="text-align:center;">Đang tải...</p>';
+            await getCatalogsForSemester(year, semester); // Load danh mục cho học kỳ hiện tại
 
-            // Lấy danh sách User
             const usersSnap = await db.collection('users').get();
             let users = []; usersSnap.forEach(doc => users.push({ id: doc.id, ...doc.data() }));
 
-            // Lấy dữ liệu lịch dạy
             let allRows = [];
             if(week === 'all') {
                 const weeksSnap = await db.collection('configs').doc('master_data').collection('academic_years').doc(year).collection('weeks').listDocuments();
@@ -433,24 +438,29 @@
                 rowsSnap.forEach(doc => allRows.push({ weekId: week, ...doc.data(), id: doc.id }));
             }
 
-            // Nhóm dữ liệu theo tuần -> user -> ngày
+            // Lấy ngày tháng của tuần đang chọn để hiển thị trên Header
+            let weekDates = {};
+            if(week !== 'all') {
+                const weekDoc = await db.collection('configs').doc('master_data').collection('academic_years').doc(year).collection('weeks').doc(week).get();
+                if(weekDoc.exists) weekDates = weekDoc.data();
+            }
+
             let groupedData = {};
             allRows.forEach(row => {
                 const weekId = row.weekId;
                 if(!groupedData[weekId]) groupedData[weekId] = {};
                 const userId = row.id;
                 if(!groupedData[weekId][userId]) groupedData[weekId][userId] = {};
-                
                 DAY_KEYS.forEach(day => {
                     if(row[day]) groupedData[weekId][userId][day] = row[day];
                 });
             });
 
-            renderTable(groupedData, users, lecturer, dayFilter);
+            renderTable(groupedData, users, lecturer, dayFilter, weekDates);
             renderMyForm(groupedData, week);
         }
 
-        function renderTable(dataMap, users, lecturerFilter, dayFilter) {
+        function renderTable(dataMap, users, lecturerFilter, dayFilter, weekDates) {
             const container = document.getElementById('scheduleTableContainer');
             let displayDays = DAY_KEYS;
             let displayDayNames = DISPLAY_DAYS;
@@ -461,7 +471,18 @@
 
             let html = `<table id="scheduleTable"><thead><tr><th style="width:150px; text-align:center; position:relative;">Giảng Viên</th>`;
             displayDays.forEach((day, idx) => {
-                html += `<th class="day-header-cell" style="width:200px;">${displayDayNames[idx]}</th>`;
+                // Xử lý hiển thị ngày tháng (THỨ HAI 25/5/2026)
+                let dateStr = '';
+                if(weekDates && weekDates[day]) {
+                    const d = new Date(weekDates[day] + 'T00:00:00');
+                    if(!isNaN(d.getTime())) {
+                        const dayName = displayDayNames[idx].toUpperCase();
+                        dateStr = `<br><span style="font-size:11px; color:#b0c4de;">${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}</span>`;
+                        html += `<th class="day-header-cell" style="width:200px;">${dayName} ${dateStr}</th>`;
+                        return;
+                    }
+                }
+                html += `<th class="day-header-cell" style="width:200px;">${displayDayNames[idx]} ${dateStr}</th>`;
             });
             html += `<th style="width:80px; text-align:center;">Tổng tiết</th></tr></thead><tbody>`;
 
@@ -472,11 +493,8 @@
             filteredUsers.forEach(user => {
                 html += `<tr><td class="teacher-header">${user.fullname || 'GV'}</td>`;
                 let lecturerTotal = 0;
-
                 displayDays.forEach(day => {
-                    let dayTotal = 0;
-                    let displayHtml = '';
-
+                    let dayTotal = 0; let displayHtml = '';
                     Object.keys(dataMap).forEach(weekId => {
                         const userData = dataMap[weekId][user.id];
                         if(userData && userData[day]) {
@@ -493,7 +511,6 @@
                             }
                         }
                     });
-
                     if(!displayHtml) displayHtml = '<div style="color:#ccc;text-align:center;padding:10px 0;">-</div>';
                     lecturerTotal += dayTotal;
                     if(!grandTotals[day]) grandTotals[day] = 0;
@@ -553,9 +570,9 @@
                 html += `<div class="period-row-block">
                     <button class="remove-row-btn" onclick="removePeriodRow('${dayKey}', this)">×</button>
                     <div class="field-group"><label>Cặp tiết</label><select class="period-select">${periodOpts}</select></div>
-                    <div class="field-group"><label>Môn</label><select class="subject-select" onchange="toggleCustomInput(this)"><option value="">Chọn...</option>${globalCatalogs.subjects.map(s => `<option value="${s}" ${s===entry.subject?'selected':''}>${s}</option>`).join('')}<option value="__CUSTOM__" ${entry.subject && !globalCatalogs.subjects.includes(entry.subject)?'selected':''}>✏️ Nhập khác</option></select><input type="text" class="d-none custom-input" value="${entry.subject && !globalCatalogs.subjects.includes(entry.subject)?entry.subject:''}"></div>
-                    <div class="field-group"><label>Lớp</label><select class="class-select" onchange="toggleCustomInput(this)"><option value="">Chọn...</option>${globalCatalogs.classes.map(c => `<option value="${c}" ${c===entry.class?'selected':''}>${c}</option>`).join('')}<option value="__CUSTOM__" ${entry.class && !globalCatalogs.classes.includes(entry.class)?'selected':''}>✏️ Nhập khác</option></select><input type="text" class="d-none custom-input" value="${entry.class && !globalCatalogs.classes.includes(entry.class)?entry.class:''}"></div>
-                    <div class="field-group"><label>Phòng</label><select class="room-select" onchange="toggleCustomInput(this)"><option value="">Chọn...</option>${globalCatalogs.rooms.map(r => `<option value="${r}" ${r===entry.room?'selected':''}>${r}</option>`).join('')}<option value="__CUSTOM__" ${entry.room && !globalCatalogs.rooms.includes(entry.room)?'selected':''}>✏️ Nhập khác</option></select><input type="text" class="d-none custom-input" value="${entry.room && !globalCatalogs.rooms.includes(entry.room)?entry.room:''}"></div>
+                    <div class="field-group"><label>Môn</label><select class="subject-select" onchange="toggleCustomInput(this)"><option value="">Chọn...</option>${catalogs.subjects.map(s => `<option value="${s}" ${s===entry.subject?'selected':''}>${s}</option>`).join('')}<option value="__CUSTOM__" ${entry.subject && !catalogs.subjects.includes(entry.subject)?'selected':''}>✏️ Nhập khác</option></select><input type="text" class="d-none custom-input" value="${entry.subject && !catalogs.subjects.includes(entry.subject)?entry.subject:''}"></div>
+                    <div class="field-group"><label>Lớp</label><select class="class-select" onchange="toggleCustomInput(this)"><option value="">Chọn...</option>${catalogs.classes.map(c => `<option value="${c}" ${c===entry.class?'selected':''}>${c}</option>`).join('')}<option value="__CUSTOM__" ${entry.class && !catalogs.classes.includes(entry.class)?'selected':''}>✏️ Nhập khác</option></select><input type="text" class="d-none custom-input" value="${entry.class && !catalogs.classes.includes(entry.class)?entry.class:''}"></div>
+                    <div class="field-group"><label>Phòng</label><select class="room-select" onchange="toggleCustomInput(this)"><option value="">Chọn...</option>${catalogs.rooms.map(r => `<option value="${r}" ${r===entry.room?'selected':''}>${r}</option>`).join('')}<option value="__CUSTOM__" ${entry.room && !catalogs.rooms.includes(entry.room)?'selected':''}>✏️ Nhập khác</option></select><input type="text" class="d-none custom-input" value="${entry.room && !catalogs.rooms.includes(entry.room)?entry.room:''}"></div>
                     <div class="field-group"><label>Số tiết</label><input type="number" class="slots-input" value="${entry.slots||SLOTS_PER_PERIOD}" min="0"></div>
                     <div class="field-group"><label>Ghi chú</label><input type="text" class="note-input" value="${entry.note||''}"></div>
                 </div>`;
@@ -564,7 +581,6 @@
             updateDayTotal(dayKey);
         }
 
-        // --- 8. CÁC HÀM HỖ TRỢ FORM ---
         function updateDayTotal(dayKey) {
             const container = document.getElementById(`container_${dayKey}`);
             if(!container) return;
@@ -580,9 +596,9 @@
             newBlock.innerHTML = `
                 <button class="remove-row-btn" onclick="removePeriodRow('${dayKey}', this)">×</button>
                 <div class="field-group"><label>Cặp tiết</label><select class="period-select">${['I','II','III','IV','V'].map(p=>`<option value="${p}">${p}</option>`).join('')}</select></div>
-                <div class="field-group"><label>Môn</label><select class="subject-select" onchange="toggleCustomInput(this)"><option value="">Chọn...</option>${globalCatalogs.subjects.map(s=>`<option value="${s}">${s}</option>`).join('')}<option value="__CUSTOM__">✏️ Nhập khác</option></select><input type="text" class="d-none custom-input"></div>
-                <div class="field-group"><label>Lớp</label><select class="class-select" onchange="toggleCustomInput(this)"><option value="">Chọn...</option>${globalCatalogs.classes.map(c=>`<option value="${c}">${c}</option>`).join('')}<option value="__CUSTOM__">✏️ Nhập khác</option></select><input type="text" class="d-none custom-input"></div>
-                <div class="field-group"><label>Phòng</label><select class="room-select" onchange="toggleCustomInput(this)"><option value="">Chọn...</option>${globalCatalogs.rooms.map(r=>`<option value="${r}">${r}</option>`).join('')}<option value="__CUSTOM__">✏️ Nhập khác</option></select><input type="text" class="d-none custom-input"></div>
+                <div class="field-group"><label>Môn</label><select class="subject-select" onchange="toggleCustomInput(this)"><option value="">Chọn...</option>${catalogs.subjects.map(s=>`<option value="${s}">${s}</option>`).join('')}<option value="__CUSTOM__">✏️ Nhập khác</option></select><input type="text" class="d-none custom-input"></div>
+                <div class="field-group"><label>Lớp</label><select class="class-select" onchange="toggleCustomInput(this)"><option value="">Chọn...</option>${catalogs.classes.map(c=>`<option value="${c}">${c}</option>`).join('')}<option value="__CUSTOM__">✏️ Nhập khác</option></select><input type="text" class="d-none custom-input"></div>
+                <div class="field-group"><label>Phòng</label><select class="room-select" onchange="toggleCustomInput(this)"><option value="">Chọn...</option>${catalogs.rooms.map(r=>`<option value="${r}">${r}</option>`).join('')}<option value="__CUSTOM__">✏️ Nhập khác</option></select><input type="text" class="d-none custom-input"></div>
                 <div class="field-group"><label>Số tiết</label><input type="number" class="slots-input" value="${SLOTS_PER_PERIOD}" min="0"></div>
                 <div class="field-group"><label>Ghi chú</label><input type="text" class="note-input"></div>
             `;
@@ -597,7 +613,7 @@
         }
         function toggleCustomInput(sel) { const inp = sel.parentElement.querySelector('.custom-input'); if(sel.value === '__CUSTOM__') { inp.classList.remove('d-none'); sel.classList.add('d-none'); } else { inp.classList.add('d-none'); sel.classList.remove('d-none'); } }
 
-        // --- 9. LƯU DỮ LIỆU ---
+        // --- 8. LƯU DỮ LIỆU ---
         async function saveDay(dayKey) {
             if(!currentUser) return;
             const container = document.getElementById(`container_${dayKey}`);
@@ -662,7 +678,7 @@
             } catch(e) { alert("Lỗi: " + e.message); }
         }
 
-        // --- 10. ĐỔI TÊN ---
+        // --- 9. ĐỔI TÊN ---
         function openChangeNameModal() {
             document.getElementById('newDisplayName').value = currentUser.displayName || '';
             document.getElementById('changeNameModal').style.display = 'flex';
