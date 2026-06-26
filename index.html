@@ -628,7 +628,7 @@
 
             try {
                 const rowRef = db.collection('configs').doc('master_data').collection('academic_years').doc(year).collection('weeks').doc(week).collection('rows').doc(targetId);
-                await rowRef.update({ [dayKey]: dataArray });
+                await rowRef.set({ [dayKey]: dataArray }, { merge: true });
                 alert("✅ Đã lưu!"); renderDayRows(dayKey, dataArray); await loadData();
             } catch(e) { alert("Lỗi: " + e.message); }
         }
@@ -657,7 +657,7 @@
             });
             try {
                 const rowRef = db.collection('configs').doc('master_data').collection('academic_years').doc(year).collection('weeks').doc(week).collection('rows').doc(targetId);
-                await rowRef.update(allData);
+                await rowRef.set(allData, { merge: true });
                 alert("✅ Đã lưu cả tuần!"); await loadData();
             } catch(e) { alert("Lỗi: " + e.message); }
         }
